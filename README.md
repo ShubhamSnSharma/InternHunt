@@ -79,5 +79,5 @@ streamlit run app.py
 📩 Contact
 
 📧 Email: shubhamsharma99918@gmail.com
-🌍 GitHub: 
+🌍 GitHub: https://github.com/Psycho047
 🔗 LinkedIn: www.linkedin.com/in/shubham-sharma-163a962a9
