@@ -154,7 +154,6 @@ import json
 #         return None  # Handle API errors
 
 
-
 import requests
 import streamlit as st
 
@@ -210,20 +209,28 @@ def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand
 
 
 st.set_page_config(
-   page_title="AI Resume Analyzer",
-   page_icon='./Logo/logo2.png',
+   page_title="InternHunt - Your Internship Finder",
+   page_icon='/Users/shubham/Desktop/Project/Logo/InternHunt_logo.png',
 )
 def run():
-    img = Image.open('./Logo/logo2.png')
+    img = Image.open('/Users/shubham/Desktop/Project/Logo/InternHunt_logo.png')
     # img = img.resize((250,250))
     st.image(img)
     st.title("AI Resume Analyser")
     st.sidebar.markdown("# Choose User")
     activities = ["User", "Admin"]
     choice = st.sidebar.selectbox("Choose among the given options:", activities)
-    link = '[©Developed by Shubham,Abhinav,Pragya](www.linkedin.com/in/shubham-sharma-163a962a9)'
-    st.sidebar.markdown(link, unsafe_allow_html=True)
-
+    st.sidebar.markdown(
+    """
+    <p style='text-align: center; font-size: 12px;'>
+        © Developed by 
+        <a href='https://www.linkedin.com/in/shubham-sharma-163a962a9' target='_blank'>Shubham</a>, 
+        <a href='https://www.linkedin.com/in/abhinav-ghangas-5a3b8128a' target='_blank'>Abhinav</a>, 
+        <a href='https://www.linkedin.com/in/pragya-9974b1298' target='_blank'>Pragya</a>
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
     # Create the DB
     db_sql = """CREATE DATABASE IF NOT EXISTS CV;"""
@@ -247,7 +254,7 @@ def run():
                     """
     cursor.execute(table_sql)
     if choice == 'User':
-        st.markdown('''<h5 style='text-align: left; color: #021659;'> Upload your resume, and get smart recommendations</h5>''',
+        st.markdown('''<h5 style='text-align: left; color: #008000;'> Upload your resume, and get smart recommendations</h5>''',
                     unsafe_allow_html=True)
         pdf_file = st.file_uploader("Choose your Resume", type=["pdf"])
         if pdf_file is not None:
@@ -350,7 +357,7 @@ def run():
             extracted_skills = resume_data.get('skills', [])
 
             # Initialize recommended skills and career field
-            reco_field = None
+            reco_field = "General"  # Default fallback value
             recommended_skills = []
 
             # Define skill categories
@@ -364,6 +371,27 @@ def run():
                             'illustrator', 'adobe after effects', 'after effects', 'adobe premiere pro',
                             'premiere pro', 'adobe indesign', 'indesign', 'wireframe', 'solid', 'grasp',
                             'user research', 'user experience']
+
+            # Convert to lowercase for easier matching
+            extracted_skills = [skill.lower() for skill in extracted_skills]
+
+            # Matching
+            if any(skill in ds_keyword for skill in extracted_skills):
+                reco_field = "Data Science"
+                recommended_skills = ['Flask', 'Numpy', 'Pandas', 'Deep Learning', 'AWS', 'Azure', 'Streamlit']
+            elif any(skill in web_keyword for skill in extracted_skills):
+                reco_field = "Web Development"
+                recommended_skills = ['React', 'Django', 'HTML', 'CSS', 'Javascript', 'Node.js']
+            elif any(skill in android_keyword for skill in extracted_skills):
+                reco_field = "Android Development"
+                recommended_skills = ['Kotlin', 'Java', 'Flutter', 'XML']
+            elif any(skill in ios_keyword for skill in extracted_skills):
+                reco_field = "iOS Development"
+                recommended_skills = ['Swift', 'Xcode', 'Cocoa']
+            elif any(skill in uiux_keyword for skill in extracted_skills):
+                reco_field = "UI/UX Design"
+                recommended_skills = ['Figma', 'Adobe XD', 'User Research', 'Prototyping']
+
 
             # Initialize recommended fields and skills
             recommended_skills = []
@@ -431,7 +459,7 @@ def run():
                                             'Teamwork', 'Attention to Detail'])
 
             # Display Recommended Fields
-            st.subheader("### Possible Career Fields Based on Your Skills")
+            st.subheader("Possible Career Fields Based on Your Skills")
             st.write(", ".join(recommended_fields))
 
             # Display Recommended Skills
@@ -527,46 +555,83 @@ def run():
 
             connection.commit()
         else:
-            st.error('Something went wrong..')
+            st.error('Welcome!!!')
     else:
-        ## Admin Side
+        import pandas as pd
+        import plotly.express as px
+
+        # Utility function to generate a download link
+        def get_table_download_link(df, filename, link_text):
+            import base64
+            csv = df.to_csv(index=False)
+            b64 = base64.b64encode(csv.encode()).decode()
+            return f'<a href="data:file/csv;base64,{b64}" download="{filename}">{link_text}</a>'
+
+        # --- Admin Side ---
         st.success('Welcome to Admin Side')
-        # st.sidebar.subheader('**ID / Password Required!**')
+
+        # Multiple admin credentials stored in a dictionary
+        admins = {
+            'Shubham': 'Snamlien321',
+            'Abhinav': 'Abhi@321',
+            'Pragya': 'Pragya@321'
+        }
 
         ad_user = st.text_input("Username")
         ad_password = st.text_input("Password", type='password')
+
         if st.button('Login'):
-            if ad_user == 'Shubham' and ad_password == 'Snamlien321':
-                st.success("Welcome Mr. Shubham")
-                # Display Data
-                cursor.execute('''SELECT*FROM user_data''')
+            if ad_user in admins and ad_password == admins[ad_user]:
+                st.success(f"Welcome Mr./Ms. {ad_user}")
+
+                # ✅ Display Data from DB
+                cursor.execute('''SELECT * FROM user_data''')
                 data = cursor.fetchall()
+
+                df = pd.DataFrame(data, columns=[
+                    'ID', 'Name', 'Email', 'Resume Score', 'Timestamp', 'Total Page',
+                    'Predicted_Field', 'User_level', 'Actual Skills', 'Recommended Skills',
+                    'Recommended Course'
+                ])
                 st.header("**User's Data**")
-                df = pd.DataFrame(data, columns=['ID', 'Name', 'Email', 'Resume Score', 'Timestamp', 'Total Page',
-                                                 'Predicted Field', 'User Level', 'Actual Skills', 'Recommended Skills',
-                                                 'Recommended Course'])
                 st.dataframe(df)
-                st.markdown(get_table_download_link(df,'User_Data.csv','Download Report'), unsafe_allow_html=True)
-                ## Admin Side Data
-                query = 'select * from user_data;'
+
+                # ✅ Download CSV Report
+                st.markdown(get_table_download_link(df, 'User_Data.csv', '📥 Download Report'), unsafe_allow_html=True)
+
+                # ✅ Read data again for charts
+                query = 'SELECT * FROM user_data;'
                 plot_data = pd.read_sql(query, connection)
 
-                ## Pie chart for predicted field recommendations
-                labels = plot_data.Predicted_Field.unique()
-                print(labels)
-                values = plot_data.Predicted_Field.value_counts()
-                st.subheader("**Pie-Chart for Predicted Field Recommendation**")
-                fig = px.pie(df, values=values, names=labels, title='Predicted Field according to the Skills')
-                st.plotly_chart(fig)
+                # Decode bytes to string if needed
+                for col in ['Predicted_Field', 'User_level']:
+                    if plot_data[col].dtype == object:
+                        plot_data[col] = plot_data[col].apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else x)
 
-                ### Pie chart for User's👨‍💻 Experienced Level
-                labels = plot_data.User_level.unique()
-                values = plot_data.User_level.value_counts()
-                st.subheader("**Pie-Chart for User's Experienced Level**")
-                fig = px.pie(df, values=values, names=labels, title="Pie-Chart📈 for User's👨‍💻 Experienced Level")
-                st.plotly_chart(fig)
+                # ✅ Pie Chart: Predicted Field
+                st.subheader("📊 Pie-Chart for Predicted Field Recommendation")
+                field_counts = plot_data['Predicted_Field'].value_counts().reset_index()
+                field_counts.columns = ['Predicted_Field', 'Count']
+                fig1 = px.pie(
+                    field_counts,
+                    values='Count',
+                    names='Predicted_Field',
+                    title='Predicted Field according to the Skills'
+                )
+                st.plotly_chart(fig1)
 
+                # ✅ Pie Chart: User Experience Level
+                st.subheader("📊 Pie-Chart for User's Experienced Level")
+                level_counts = plot_data['User_level'].value_counts().reset_index()
+                level_counts.columns = ['User_level', 'Count']
+                fig2 = px.pie(
+                    level_counts,
+                    values='Count',
+                    names='User_level',
+                    title="User's👨‍💻 Experienced Level"
+                )
+                st.plotly_chart(fig2)
 
             else:
-                st.error("Wrong ID & Password Provided")
+                st.error("❌ Wrong ID & Password Provided")
 run()
