@@ -111,8 +111,8 @@ def course_recommender(course_list):
 
 
 # Jooble API credentials
-import requests
-import json
+# import requests
+# import json
 
 # Jooble API Key
 # JOOBLE_API_KEY = "4d4c75a1-1761-49c7-a003-71ed93beaf52"
@@ -153,13 +153,12 @@ import json
 #     except Exception as e:
 #         return None  # Handle API errors
 
-
-import requests
-import streamlit as st
+# import requests
+# import streamlit as st
 
 # Adzuna API Credentials
-ADZUNA_APP_ID = "1178ed1c"
-ADZUNA_API_KEY = "2e96a2f4573fff0502a2a081c21b6810"
+ADZUNA_APP_ID = "Your App ID"
+ADZUNA_API_KEY = "Your Unique Api Key"
 ADZUNA_COUNTRY = "in"  # Change this based on the country you want
 
 # Function to fetch job listings
@@ -186,7 +185,7 @@ def get_jobs_from_adzuna(skill, location="India", results=10):
 
 #CONNECT TO DATABASE
 
-connection = pymysql.connect(host='localhost',user='root',password='Snamlien321',db='cv')
+connection = pymysql.connect(host='localhost',user='root',password='Your Sql Password',db='cv')
 cursor = connection.cursor()
 
 def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand_level, skills, recommended_skills, courses):
@@ -572,9 +571,9 @@ def run():
 
         # Multiple admin credentials stored in a dictionary
         admins = {
-            'Shubham': 'Snamlien321',
-            'Abhinav': 'Abhi@321',
-            'Pragya': 'Pragya@321'
+            'admin1': 'password1',
+            'admin2': 'password2',
+            'admin3': 'password3'
         }
 
         ad_user = st.text_input("Username")
