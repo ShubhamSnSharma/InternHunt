@@ -3,7 +3,6 @@ import pandas as pd
 import base64,random
 import time,datetime
 #libraries to parse the resume pdf files
-from pyresparser import ResumeParser
 from pdfminer3.layout import LAParams, LTTextBox
 from pdfminer3.pdfpage import PDFPage
 from pdfminer3.pdfinterp import PDFResourceManager
@@ -28,6 +27,9 @@ nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
+
+# Now import pyresparser
+from pyresparser import ResumeParser
 
 # Download necessary NLTK resources if not already present
 nltk_data_path = os.path.join(os.path.expanduser("~"), "nltk_data")
