@@ -19,5 +19,6 @@ requests
 beautifulsoup4
 lxml
 matplotlib
+yt-dlp
 
 
