@@ -23,6 +23,12 @@ import json
 import time
 import datetime
 
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
+
 # Download necessary NLTK resources if not already present
 nltk_data_path = os.path.join(os.path.expanduser("~"), "nltk_data")
 if not os.path.exists(os.path.join(nltk_data_path, "corpora/stopwords")):
