@@ -23,6 +23,13 @@ import json
 import time
 import datetime
 
+# Download necessary NLTK resources if not already present
+nltk_data_path = os.path.join(os.path.expanduser("~"), "nltk_data")
+if not os.path.exists(os.path.join(nltk_data_path, "corpora/stopwords")):
+    nltk.download("stopwords", download_dir=nltk_data_path)
+
+# Set NLTK data path (helps Streamlit Cloud locate it)
+nltk.data.path.append(nltk_data_path)
 
 def fetch_yt_video(link):
     try:
