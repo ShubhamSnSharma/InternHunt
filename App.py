@@ -173,8 +173,8 @@ def course_recommender(course_list):
 # import streamlit as st
 
 # Adzuna API Credentials
-ADZUNA_APP_ID = "Your App ID"
-ADZUNA_API_KEY = "Your Unique Api Key"
+ADZUNA_APP_ID = "1178ed1c"
+ADZUNA_API_KEY = "2e96a2f4573fff0502a2a081c21b6810"
 ADZUNA_COUNTRY = "in"  # Change this based on the country you want
 
 # Function to fetch job listings
@@ -201,7 +201,7 @@ def get_jobs_from_adzuna(skill, location="India", results=10):
 
 #CONNECT TO DATABASE
 
-connection = pymysql.connect(host='localhost',user='root',password='Your Sql Password',db='cv')
+connection = pymysql.connect(host='localhost',user='root',password='Snamlien321',db='cv')
 cursor = connection.cursor()
 
 def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand_level, skills, recommended_skills, courses):
@@ -587,7 +587,7 @@ def run():
 
         # Multiple admin credentials stored in a dictionary
         admins = {
-            'admin1': 'password1',
+            'Shubham': 'Snamlien321',
             'admin2': 'password2',
             'admin3': 'password3'
         }
