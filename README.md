@@ -13,15 +13,25 @@ Features
 1. User Side
    
 ✨ Resume Upload: Simple drag-and-drop functionality to upload resumes in PDF format.
+
 ✨ Skill Extraction: Uses rule-based and NLP techniques to extract key skills from the uploaded resume.
+
 ✨ Internship Recommendations: Fetches internships using Jooble and Adzuna APIs based on the user’s skills.
+
 ✨ Career Field Prediction: Predicts the most suitable career domain (e.g., Software Development, Data Analytics) from the extracted skills.
+
 ✨ Skill Gap Analysis: Identifies missing or low-frequency skills to improve user profile strength.
+
 ✨ Course Suggestions: Recommends relevant courses to upskill and cover the identified gaps.
+
 ✨ Resume Scoring: Calculates a score based on resume structure, keyword coverage, and formatting.
+
 ✨ Resume Tips: Gives personalized tips to improve resume quality and content.
+
 ✨ User Level Classification: Categorizes users into Beginner, Intermediate, or Advanced based on overall resume strength.
+
 ✨ YouTube Video Recommendation: Shows a relevant video to help users improve resumes or prepare for interviews.
+
 
 2. Admin Side (Under Development)
 ✨ Admin Dashboard: Will provide a dashboard for recruiters to manage and view candidate data.
