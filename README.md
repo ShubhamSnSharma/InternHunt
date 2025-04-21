@@ -87,46 +87,66 @@ MySQL or SQLite (Planned): To store user and resume data in the future.
 
 
 1️⃣ Clone the Repository
+
 git clone https://github.com/Psycho047/InternHunt.git
+
 cd InternHunt
 
 
 2️⃣ (Optional) Create a Virtual Environment
+
 python -m venv venv
+
 # Activate the environment
+
 venv\Scripts\activate     # On Windows:
+
 source venv/bin/activate  # On macOS/Linux:
 
 
 3️⃣ Install the Required Packages
+
 pip install -r requirements.txt
 
 
 4️⃣ Set Up API Keys
+
 Create a .env file or directly edit the configuration in your Python scripts (e.g., App.py, Courses.py) to include:
+
 Jooble API Key
+
 Adzuna App ID and App Key
 
 Replace your crendentials here:
+
 JOOBLE_API_KEY=your_jooble_key_here
+
 ADZUNA_APP_ID=your_app_id
+
 ADZUNA_APP_KEY=your_app_key
 
 
 5️⃣ Database Configuration (If Using Admin Panel)
+
 If you plan to connect this with a MySQL database:
+
 Update your database connection credentials inside the file (e.g., db_connection.py or wherever DB is used):
 
+
 Replace your crendentials here:
+
 mysql.connector.connect(
+
     host="localhost",
     user="your_username",
     password="your_password",
     database="your_database"
+    
 )
 
 
 6️⃣ Run the Application
+
 streamlit run App.py
 
 
