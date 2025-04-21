@@ -1,32 +1,55 @@
-InternHunt 🚀
+InternHunt
 
-An AI-powered internship finder that analyzes resumes and recommends real-time internships.
+Built by students, for students – powered by smart logic and Python libraries, no AI, just pure efficiency!
 
+Overview
 
-
-📌 Overview
-
-The search for a suitable internship becomes more accessible through the platform named InternHunt. The platform evaluates job applicants by extracting their skills from their resumes before recommending internships based on their demonstrated skills. The platform performs skill gap analysis followed by course recommendations that help users increase their employability level.
+InternHunt is a Python-based internship recommendation platform that uses Jooble and Adzuna APIs to fetch real-time internship listings based on the skills extracted from resumes. The project focuses on text parsing and data matching techniques, not AI or machine learning models. It also recommends upskilling resources using YouTube suggestions and basic logic.
 
 
 
-✨ Features
+Features
 
-✅ Resume Analysis - The tool picks important information including skills and experiences from submitted resumes via the platform. 📄
-✅ Internship Recommendations – Matches skills with relevant internship opportunities 🎯
-✅ Skill Gap Analysis -Provides a method to discover vacant skills which leads to course recommendations for enhancement 📚
-✅ YouTube Video Suggestions – Helps users refine their resumes with expert guidance 🎥
-✅ Web Scraping & API Integration – Fetches real-time internship listings 🌍
+1. User Side
+   
+✨ Resume Upload: Simple drag-and-drop functionality to upload resumes in PDF format.
+✨ Skill Extraction: Uses rule-based and NLP techniques to extract key skills from the uploaded resume.
+✨ Internship Recommendations: Fetches internships using Jooble and Adzuna APIs based on the user’s skills.
+✨ Career Field Prediction: Predicts the most suitable career domain (e.g., Software Development, Data Analytics) from the extracted skills.
+✨ Skill Gap Analysis: Identifies missing or low-frequency skills to improve user profile strength.
+✨ Course Suggestions: Recommends relevant courses to upskill and cover the identified gaps.
+✨ Resume Scoring: Calculates a score based on resume structure, keyword coverage, and formatting.
+✨ Resume Tips: Gives personalized tips to improve resume quality and content.
+✨ User Level Classification: Categorizes users into Beginner, Intermediate, or Advanced based on overall resume strength.
+✨ YouTube Video Recommendation: Shows a relevant video to help users improve resumes or prepare for interviews.
 
+2. Admin Side (Under Development)
+✨ Admin Dashboard: Will provide a dashboard for recruiters to manage and view candidate data.
+✨ Candidate Filtering: Planned feature to filter and sort applicants by qualifications.
+✨ Resume Insights: Will show statistics on common skills, gaps, and resume quality.
+✨ Visual Applicant Tracking: Enables recruiters to track applicants with a visual interface.
+✨ Manual Internship Uploads (Planned): Ability for admins to manually post internships.
 
 
 🛠️ Tech Stack
 
-🔹 Frontend: Streamlit
-🔹 Backend: Python
-🔹 Libraries Used: Pandas, Numpy, BeautifulSoup (Web Scraping), Requests, Spacy (NLP)
-🔹 APIs & Data Sources: Real-time internship APIs (to be integrated)
+🔹 Frontend
+Streamlit: For building the interactive and responsive user interface.
+HTML/CSS (via Streamlit components): Used indirectly for layout and styling.
 
+🔹 Backend
+Python: Core language used for processing resumes, logic implementation, and API integration.
+pandas, re, docx2txt: For parsing and analyzing resume content.
+Requests: To fetch internship data via APIs.
+
+🔹 APIs & Data Sources
+Jooble API: For fetching job and internship listings.
+Adzuna API: Alternative source for real-time internship opportunities.
+YouTube Data (manually embedded): For video recommendations.
+(Note: No AI/ML models used in this version.)
+
+🔹 Database (Planned for Admin Side)
+MySQL or SQLite (Planned): To store user and resume data in the future.
 
 
 ⚡ Installation & Setup
@@ -35,17 +58,40 @@ The search for a suitable internship becomes more accessible through the platfor
 git clone https://github.com/Psycho047/InternHunt.git
 cd InternHunt
 
-2️⃣ Create a Virtual Environment
+2️⃣ (Optional) Create a Virtual Environment
 python -m venv venv
-source venv/bin/activate   # For Mac/Linux
-venv\Scripts\activate      # For Windows
+# Activate the environment
+venv\Scripts\activate     # On Windows:
+source venv/bin/activate  # On macOS/Linux:
 
-3️⃣ Install Dependencies
+
+3️⃣ Install the Required Packages
 pip install -r requirements.txt
 
-4️⃣ Run the Application
-streamlit run app.py
+4️⃣ Set Up API Keys
+Create a .env file or directly edit the configuration in your Python scripts (e.g., App.py, Courses.py) to include:
+Jooble API Key
+Adzuna App ID and App Key
 
+Replace your crendentials here:
+JOOBLE_API_KEY=your_jooble_key_here
+ADZUNA_APP_ID=your_app_id
+ADZUNA_APP_KEY=your_app_key
+
+5️⃣ Database Configuration (If Using Admin Panel)
+If you plan to connect this with a MySQL database:
+Update your database connection credentials inside the file (e.g., db_connection.py or wherever DB is used):
+
+Replace your crendentials here:
+mysql.connector.connect(
+    host="localhost",
+    user="your_username",
+    password="your_password",
+    database="your_database"
+)
+
+6️⃣ Run the Application
+streamlit run App.py
 
 
 🚀 How It Works?
