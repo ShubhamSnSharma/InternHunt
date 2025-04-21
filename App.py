@@ -183,7 +183,7 @@ else:
 st.markdown("""
     <div style="text-align: center; margin-bottom: 0;">
         <h1 style="font-size: 3em; margin-bottom: 0.2rem;">InternHunt</h1>
-        <h3 style="color: #ccc; margin-top: 0;">AI Resume Analyzer</h3>
+        <h3 style="color: #ccc; margin-top: 0;">Resume Analyzer</h3>
         <p style="color: #aaa; font-size: 1.1em;">
             Upload your resume and get smart internship recommendations based on your skills.
         </p>
@@ -488,7 +488,18 @@ def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """  # ✅ Explicit column names
 
-    rec_values = (name, email, str(res_score), timestamp, str(no_of_pages), reco_field, cand_level, skills, recommended_skills, courses)
+    rec_values = (
+        name,
+        email,
+        str(res_score),
+        timestamp,
+        str(no_of_pages),
+        reco_field,
+        cand_level,
+        ', '.join(skills),              # Must be str
+        ', '.join(recommended_skills),  # Must be str
+        ', '.join(courses)              # Must be str
+    )
 
     try:
         cursor.execute(insert_sql, rec_values)
