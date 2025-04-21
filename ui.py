@@ -99,4 +99,3 @@ def add_footer():
         """,
         unsafe_allow_html=True
     )
-
