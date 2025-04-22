@@ -1,5 +1,6 @@
 **InternHunt
 **
+
 Built by students, for students – powered by smart logic and Python libraries, no AI, just pure efficiency!
 
 
