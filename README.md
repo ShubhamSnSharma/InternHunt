@@ -178,13 +178,6 @@ USE cv;
 ```
 
 ### 6️⃣ Run the Application
-
-**Option 1: Run the refined version (Recommended)**
-```bash
-streamlit run App_refined.py
-```
-
-**Option 2: Run the original version**
 ```bash
 streamlit run App.py
 ```
@@ -202,7 +195,7 @@ streamlit run App.py
 
 ### Architecture Overview
 ```
-├── App_refined.py          # Main application (recommended)
+├── App.py          # Main application (recommended)
 ├── config.py              # Configuration management
 ├── database.py            # Database operations
 ├── resume_parser.py       # Resume parsing logic
