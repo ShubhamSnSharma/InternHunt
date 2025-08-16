@@ -1,55 +1,60 @@
-"""
-Configuration settings for the InternHunt application
-"""
+# Configuration file for InternHunt application
 import os
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
-    """Application configuration"""
+    """Application configuration class"""
     
-    # Database settings
-    DATABASE = {
+    # Database Configuration
+    DB_CONFIG = {
         'host': os.getenv('DB_HOST', 'localhost'),
         'user': os.getenv('DB_USER', 'root'),
-        'password': os.getenv('DB_PASSWORD', ''),
+        'password': os.getenv('DB_PASSWORD', ''),  # Should be set via environment variable
         'database': os.getenv('DB_NAME', 'cv'),
         'charset': 'utf8mb4'
     }
     
     # API Keys
-    JOOBLE_API_KEY = os.getenv('JOOBLE_API_KEY', '')
-    ADZUNA_APP_ID = os.getenv('ADZUNA_APP_ID', '')
-    ADZUNA_API_KEY = os.getenv('ADZUNA_API_KEY', '')
+    JOOBLE_API_KEY = os.getenv('JOOBLE_API_KEY', '4d4c75a1-1761-49c7-a003-71ed93beaf52')
+    ADZUNA_APP_ID = os.getenv('ADZUNA_APP_ID', '1178ed1c')
+    ADZUNA_API_KEY = os.getenv('ADZUNA_API_KEY', '2e96a2f4573fff0502a2a081c21b6810')
+    ADZUNA_COUNTRY = os.getenv('ADZUNA_COUNTRY', 'in')
     
-    # File upload settings
-    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-    ALLOWED_EXTENSIONS = ['pdf']
+    # Application Settings
+    APP_TITLE = "InternHunt - Your Internship Finder"
+    APP_ICON = 'Logo/InternHunt_logo.png'
+    UPLOAD_DIR = './Uploaded_Resumes/'
     
-    # Application settings
-    DEFAULT_THEME = os.getenv('DEFAULT_THEME', 'dark')
-    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-    
-    # Admin credentials (in production, use proper authentication)
-    ADMIN_USERS = {
-        'admin': os.getenv('ADMIN_PASSWORD', 'change_me'),
-        'Shubham': os.getenv('SHUBHAM_PASSWORD', 'Snamlien321'),
-        'Abhinav': os.getenv('ABHINAV_PASSWORD', 'Abhi@321'),
-        'Pragya': os.getenv('PRAGYA_PASSWORD', 'Pragya@321')
-    }
+    # Skill matching settings
+    FUZZY_THRESHOLD = 50
+    DIRECT_MATCH_WEIGHT = 1.0
+    SIMILARITY_MATCH_WEIGHT = 0.5
+    FIELD_SCORE_THRESHOLD = 0.5
     
     @classmethod
-    def validate(cls) -> bool:
-        """Validate configuration"""
-        required_vars = [
-            'JOOBLE_API_KEY',
-            'ADZUNA_APP_ID', 
-            'ADZUNA_API_KEY'
-        ]
+    def get_db_connection_string(cls) -> str:
+        """Get database connection string"""
+        return f"mysql://{cls.DB_CONFIG['user']}:{cls.DB_CONFIG['password']}@{cls.DB_CONFIG['host']}/{cls.DB_CONFIG['database']}"
+    
+    @classmethod
+    def validate_config(cls) -> Dict[str, Any]:
+        """Validate configuration and return status"""
+        issues = []
         
-        missing = [var for var in required_vars if not getattr(cls, var)]
+        if not cls.DB_CONFIG['password']:
+            issues.append("Database password not set")
         
-        if missing:
-            print(f"Warning: Missing required environment variables: {missing}")
-            return False
+        if not os.path.exists(cls.UPLOAD_DIR):
+            try:
+                os.makedirs(cls.UPLOAD_DIR, exist_ok=True)
+            except Exception as e:
+                issues.append(f"Cannot create upload directory: {e}")
         
-        return True
+        return {
+            'valid': len(issues) == 0,
+            'issues': issues
+        }
