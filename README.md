@@ -195,13 +195,22 @@ streamlit run App.py
 
 ### Architecture Overview
 ```
-├── App.py          # Main application (recommended)
-├── config.py              # Configuration management
-├── database.py            # Database operations
-├── resume_parser.py       # Resume parsing logic
-├── api_services.py        # External API integrations
-├── styles.py              # CSS styling management
-└── Courses.py             # Course recommendations
+├── .env.example
+├── .gitignore
+├── App.py
+├── Courses.py
+├── README.md
+├── api_services.py
+├── config.py
+├── database.py
+├── error_handler.py
+├── logo.png
+├── requirements.txt
+├── resume_parser.py
+├── setup_database.sql
+├── styles.py
+├── ui.py
+└── utils.py
 ```
 
 
