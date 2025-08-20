@@ -1,41 +1,180 @@
-# InternHunt 🎯
-
-**Built by students, for students – powered by smart logic and Python libraries, no AI, just pure efficiency!**
-
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-
-## 📋 Overview
-
 <div align="center">
-  <h1>InternHunt</h1>
-  <h3>AI-Powered Resume Analyzer & Job Recommendation System</h3>
-  
-  [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-  [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-FF4B4B.svg)](https://streamlit.io/)
-  [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1.svg)](https://www.mysql.com/)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  
-  <p align="center">
-    <strong>InternHunt</strong> is an intelligent resume analyzer that helps job seekers find relevant internships and job opportunities by extracting skills from resumes and matching them with job postings from multiple sources.
-  </p>
-  
-  [🚀 Live Demo](#) |
-  [📚 Documentation](#documentation) |
-  [💡 Features](#-features) |
-  [🛠️ Setup](#-setup) |
-  [📊 Database Schema](#-database-schema)
-  
-  ---
-</div>
-
-## 🌟 Features
-
-- **Resume Parsing**: Extract skills, contact information, and experience from uploaded resumes
-- **Smart Skill Matching**: Advanced NLP techniques to identify and categorize skills
-- **Job Recommendations**: Get personalized job listings from multiple sources
-- **Course Suggestions**: Receive relevant course recommendations to improve your skills
+ 
+ # InternHunt 🎯
+ 
+ Smart, local-first resume parsing, role suggestions, and job discovery.
+ 
+ [![Python](https://img.shields.io/badge/Python-3.9+-blue)](https://python.org)
+ [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B)](https://streamlit.io)
+ [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1)](https://www.mysql.com/)
+ [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+ 
+ </div>
+ 
+ ---
+ 
+ ## Overview
+ 
+ InternHunt is a modern resume analyzer and internship finder. Upload a PDF resume to extract skills and contact info, get tailored job recommendations, chat with a local LLM about your profile, and optionally save activity to MySQL. The app is modular, fast, and works without paid AI APIs.
+ 
+ ---
+ 
+ ## Features
+ 
+ - **Resume parsing** (`resume_parser.py`)
+   - Extracts name, email, phone, skills, and raw text from PDFs
+ - **Skill categorization** (UI in `App_refined.py`)
+   - Groups technical, data, soft, and other skills with clean badges
+ - **Job recommendations via APIs** (`api_services.py`)
+   - Adzuna and Jooble integrations (optional API keys)
+ - **Local Chatbot (no paid API)** (`chat_service.py`)
+   - Uses [Ollama](https://ollama.com/) locally; default model: `phi:latest`
+   - Resume‑aware responses with a chat UI panel
+ - **HTML job scrapers** (`job_scrapers.py`)
+   - Best‑effort scraping from Internshala, GitHub repos (hiring/internship topics), and RemoteOK
+ - **Course suggestions** (`Courses.py`)
+   - Curated course lists based on extracted skills
+ - **Optional MySQL storage** (`database.py`)
+   - Save user interactions and scores when DB credentials are configured
+ - **Polished UI and themes** (`styles.py`)
+   - Dark/light toggle, modern components, responsive layout
+ 
+ ---
+ 
+ ## Architecture
+ 
+ - `App_refined.py` – Streamlit app entrypoint and UI wiring
+ - `config.py` – loads environment with `python-dotenv` and exposes `Config`
+ - `resume_parser.py` – PDF parsing and skill extraction
+ - `api_services.py` – Adzuna/Jooble clients
+ - `chat_service.py` – Ollama client and resume context builder
+ - `job_scrapers.py` – HTML scrapers and aggregator
+ - `database.py` – optional MySQL management
+ - `styles.py`, `utils.py`, `error_handler.py` – presentation and helpers
+ 
+ ---
+ 
+ ## Quick Start
+ 
+ 1) Clone and install
+ ```bash
+ python -m venv .venv && source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+ pip install -r requirements.txt
+ ```
+ 
+ 2) (Recommended) spaCy small English model
+ ```bash
+ python -m spacy download en_core_web_sm || true
+ ```
+ 
+ 3) Create `.env` (or copy `.env.example`):
+ ```env
+ # Database (optional)
+ DB_HOST=localhost
+ DB_USER=root
+ DB_PASSWORD=           # set if using MySQL
+ DB_NAME=internhunt
+ 
+ # Job APIs (optional)
+ JOOBLE_API_KEY=        # required to use Jooble
+ ADZUNA_APP_ID=
+ ADZUNA_API_KEY=
+ ADZUNA_COUNTRY=in
+ 
+ # Local Chat (Ollama)
+ OLLAMA_HOST=http://localhost:11434
+ OLLAMA_MODEL=phi:latest
+ ```
+ 
+ 4) Start Ollama (for local chat)
+ - Install from https://ollama.com/
+ - Pull a small model (already the default in code):
+ ```bash
+ ollama pull phi:latest
+ ```
+ - Quick check:
+ ```bash
+ curl -s http://localhost:11434/api/generate -d '{"model":"phi:latest","prompt":"Hello"}'
+ ```
+ 
+ 5) Run the app
+ ```bash
+ python -m streamlit run App_refined.py
+ ```
+ 
+ App opens at http://localhost:8501
+ 
+ ---
+ 
+ ## Using the App
+ 
+ - Upload a PDF resume
+ - Review extracted info and the Resume Score
+ - Open the expander: "🤖 Chat & Job Scraper (No API)"
+   - Toggle "Use my resume as context" to ground chat answers
+   - Optional location and extra keywords for scraping
+   - Click "Scrape jobs now" to fetch listings
+   - Ask the chatbot to suggest roles, tailor cover letters, etc.
+ - Use Job Recommendations (Adzuna/Jooble) if API keys are configured
+ - Explore course suggestions relevant to your skills
+ 
+ ---
+ 
+ ## Configuration Notes
+ 
+ - Ollama host must NOT include `/api` – set `OLLAMA_HOST=http://localhost:11434`
+ - You can switch models any time by changing `OLLAMA_MODEL` (e.g., `phi3:mini`, `llama3.1:8b`) and restarting the app
+ - Database is optional; without `DB_PASSWORD` the app runs without DB features
+ 
+ ---
+ 
+ ## Troubleshooting
+ 
+ - Chat error 404 at `/api/generate`
+   - Ensure `.env` uses `OLLAMA_HOST=http://localhost:11434` (no trailing `/api`)
+   - Confirm the model exists: `curl http://localhost:11434/api/tags`
+ - Chat error: model not found
+   - Pull the model: `ollama pull <model>` and update `OLLAMA_MODEL`
+ - No jobs from scrapers
+   - Try broader keywords or remove location (sites may change markup)
+ - NLTK downloads
+   - The app fetches required NLTK data at runtime; ensure network access on first run
+ 
+ ---
+ 
+ ## Project Structure
+ 
+ ```
+ InternHunt/
+ ├─ App_refined.py
+ ├─ api_services.py
+ ├─ chat_service.py
+ ├─ job_scrapers.py
+ ├─ resume_parser.py
+ ├─ database.py
+ ├─ config.py
+ ├─ styles.py
+ ├─ utils.py
+ ├─ Courses.py
+ ├─ requirements.txt
+ ├─ .env.example
+ └─ Uploaded_Resumes/
+ ```
+ 
+ ---
+ 
+ ## Roadmap
+ 
+ - Enhanced scraper resilience (selectors, anti‑bot)
+ - Model selection UI for Ollama
+ - Save scraped jobs to DB and enable admin review
+ - Exportable cover letters and email templates
+ 
+ ---
+ 
+ ## License
+ 
+ MIT License. See `LICENSE` for details.
 - **Admin Dashboard**: Track user activity and job applications
 - **Modern UI**: Clean, responsive interface with dark/light mode
 - **Secure**: Local processing of resumes with no data storage without consent
@@ -178,6 +317,13 @@ USE cv;
 ```
 
 ### 6️⃣ Run the Application
+
+**Option 1: Run the refined version (Recommended)**
+```bash
+streamlit run App_refined.py
+```
+
+**Option 2: Run the original version**
 ```bash
 streamlit run App.py
 ```
@@ -195,22 +341,13 @@ streamlit run App.py
 
 ### Architecture Overview
 ```
-├── .env.example
-├── .gitignore
-├── App.py
-├── Courses.py
-├── README.md
-├── api_services.py
-├── config.py
-├── database.py
-├── error_handler.py
-├── logo.png
-├── requirements.txt
-├── resume_parser.py
-├── setup_database.sql
-├── styles.py
-├── ui.py
-└── utils.py
+├── App_refined.py          # Main application (recommended)
+├── config.py              # Configuration management
+├── database.py            # Database operations
+├── resume_parser.py       # Resume parsing logic
+├── api_services.py        # External API integrations
+├── styles.py              # CSS styling management
+└── Courses.py             # Course recommendations
 ```
 
 
