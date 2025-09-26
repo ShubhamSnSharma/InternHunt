@@ -169,36 +169,151 @@ class AnalyticsUtils:
     """Analytics and metrics utilities"""
     
     @staticmethod
+    def calculate_resume_score_breakdown(resume_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Return a detailed breakdown: total, components, and suggestions.
+        Improved scoring: adds quantified achievements, recency, diminishing returns for skills,
+        and penalties for missing critical items.
+        """
+        import re
+        total = 0.0
+        components: Dict[str, float] = {
+            "basic_info": 0.0,         # max 15
+            "skills": 0.0,             # max 30
+            "sections": 0.0,           # max 25
+            "achievements": 0.0,       # max 15
+            "recency": 0.0,            # max 10
+            "links": 0.0,              # max 5
+        }
+
+        raw_text_full = (resume_data.get('raw_text') or '')
+        raw_text = raw_text_full.lower()
+        skills = resume_data.get('skills', []) or []
+
+        # ---------- Basic information (max 15) ----------
+        basic = 0.0
+        basic += 6 if resume_data.get('name') else 0
+        basic += 5 if resume_data.get('email') else 0
+        basic += 4 if resume_data.get('mobile_number') else 0
+        components["basic_info"] = basic
+        total += basic
+
+        # ---------- Skills (max 30) with diminishing returns and diversity bonus ----------
+        uniq = list({(s or '').strip().lower() for s in skills if s})
+        n = len(uniq)
+        # Diminishing returns curve: up to ~10 effective points scaled to 30
+        # eff = min(n, 12) mapped via sqrt curve
+        import math
+        eff = math.sqrt(min(n, 12)) / math.sqrt(12)  # 0..1
+        skill_points = eff * 24  # base up to 24
+        # Diversity bonus: mix of hard vs soft keywords in raw text
+        soft_kw = ["leadership", "communication", "teamwork", "collaboration", "mentoring", "stakeholder"]
+        hard_hit = sum(1 for s in uniq if re.search(r"[a-z]", s)) >= 5
+        soft_hit = any(k in raw_text for k in soft_kw)
+        if hard_hit and soft_hit:
+            skill_points += 6  # bonus to reach 30
+        components["skills"] = min(30.0, skill_points)
+        total += components["skills"]
+
+        # ---------- Sections (max 25) ----------
+        def has_any(patterns):
+            return any(re.search(p, raw_text, re.I) for p in patterns)
+        has_exp = has_any([r"experience", r"work history", r"employment"])
+        has_edu = has_any([r"education", r"b\.?tech|bachelor|master|b\.?e\.?|degree"])
+        has_proj = has_any([r"projects?", r"publications?", r"case study", r"portfolio"])
+        sec_pts = 0.0
+        sec_pts += 12 if has_exp else 0
+        sec_pts += 8 if has_edu else 0
+        sec_pts += 5 if has_proj else 0
+        components["sections"] = sec_pts
+        total += sec_pts
+
+        # ---------- Achievements (max 15): quantified impact ----------
+        # Look for bullets/sentences with numbers, %, $ and action verbs
+        sentences = re.split(r"[\.\!\?\n]+", raw_text_full)
+        action_verbs = ["led", "managed", "increased", "reduced", "improved", "built", "designed", "shipped", "optimized", "launched", "delivered"]
+        quantified = 0
+        mentions = 0
+        for s in sentences:
+            s_l = s.lower()
+            if any(v in s_l for v in action_verbs):
+                mentions += 1
+                if re.search(r"(\d+%|\$\d+|\b\d{1,4}\b)", s_l):
+                    quantified += 1
+        ach_ratio = quantified / mentions if mentions else 0.0
+        ach_pts = min(15.0, 15.0 * ach_ratio)
+        components["achievements"] = ach_pts
+        total += ach_pts
+
+        # ---------- Recency (max 10): recent years in resume ----------
+        years = [int(y) for y in re.findall(r"\b(20\d{2}|19\d{2})\b", raw_text_full)]
+        rec_pts = 0.0
+        if years:
+            latest = max(years)
+            # Heuristic current year; avoid importing datetime for deterministic scoring
+            current_year = 2025
+            diff = current_year - latest
+            if diff <= 1:
+                rec_pts = 10.0
+            elif diff <= 2:
+                rec_pts = 8.0
+            elif diff <= 4:
+                rec_pts = 5.0
+            elif diff <= 6:
+                rec_pts = 2.0
+        components["recency"] = rec_pts
+        total += rec_pts
+
+        # ---------- Links (max 5) ----------
+        linkedin = resume_data.get('linkedin')
+        github = resume_data.get('github')
+        has_linkedin = bool(linkedin and (isinstance(linkedin, list) and len(linkedin) > 0 or isinstance(linkedin, str)))
+        has_github = bool(github and (isinstance(github, list) and len(github) > 0 or isinstance(github, str)))
+        link_pts = (3 if has_linkedin else 0) + (2 if has_github else 0)
+        components["links"] = link_pts
+        total += link_pts
+
+        # ---------- Penalties (up to -15): missing contacts, too short, missing sections ----------
+        penalties = 0.0
+        length = len(raw_text)
+        if length < 600:
+            penalties += 6.0
+        if not resume_data.get('email'):
+            penalties += 4.0
+        if not has_exp:
+            penalties += 3.0
+        if not has_edu:
+            penalties += 2.0
+        total = max(0.0, total - min(15.0, penalties))
+
+        # Suggestions
+        suggestions = AnalyticsUtils.get_improvement_suggestions(resume_data)
+        # Add contextual suggestions based on new components
+        if ach_pts < 10:
+            suggestions.append("Quantify achievements with numbers or % (e.g., 'Improved latency by 30%').")
+        if rec_pts < 5:
+            suggestions.append("Add recent work/education (last 2–3 years) to show recency.")
+        if components["skills"] < 20:
+            suggestions.append("Include a balanced mix of hard and soft skills relevant to your target roles.")
+        if components["sections"] < 20:
+            suggestions.append("Ensure clear sections: Experience, Education, and Projects with bullet points.")
+        if link_pts == 0:
+            suggestions.append("Add your LinkedIn and GitHub (if applicable) for credibility.")
+
+        # Compose output
+        max_map = {"basic_info": 15, "skills": 30, "sections": 25, "achievements": 15, "recency": 10, "links": 5}
+        # Round components for display
+        components_rounded = {k: round(min(v, max_map[k]), 2) for k, v in components.items()}
+
+        return {
+            "total": int(min(round(total, 0), 100)),
+            "components": components_rounded,
+            "suggestions": suggestions,
+        }
+
+    @staticmethod
     def calculate_resume_score(resume_data: Dict[str, Any]) -> int:
-        """Calculate resume score based on various factors"""
-        score = 0
-        
-        # Basic information (30 points)
-        if resume_data.get('name'):
-            score += 10
-        if resume_data.get('email'):
-            score += 10
-        if resume_data.get('mobile_number'):
-            score += 10
-        
-        # Skills (40 points)
-        skills = resume_data.get('skills', [])
-        if skills:
-            skill_score = min(len(skills) * 2, 40)  # Max 40 points for skills
-            score += skill_score
-        
-        # Professional links (20 points)
-        if resume_data.get('linkedin'):
-            score += 10
-        if resume_data.get('github'):
-            score += 10
-        
-        # Content quality (10 points)
-        raw_text = resume_data.get('raw_text', '')
-        if len(raw_text) > 500:  # Reasonable amount of content
-            score += 10
-        
-        return min(score, 100)  # Cap at 100
+        """Compatibility wrapper returning only the total score."""
+        return AnalyticsUtils.calculate_resume_score_breakdown(resume_data)["total"]
     
     @staticmethod
     def categorize_user_level(resume_score: int, skills_count: int) -> str:
