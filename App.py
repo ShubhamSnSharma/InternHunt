@@ -202,6 +202,145 @@ def display_skills(categorized_skills):
     html_output += '</div>'
     st.markdown(html_output, unsafe_allow_html=True)
 
+def _fetch_all_jobs(skills, user_location):
+    """Fetch and merge Jooble + scraper jobs into a common schema and deduplicate by URL."""
+    jooble_jobs = JobAPIService.fetch_jobs_from_jooble(skills, user_location) or []
+    scraped_jobs = scrape_all(skills, user_location) or []
+
+    def map_jooble(j):
+        return {
+            "title": j.get("title", ""),
+            "company": j.get("company", ""),
+            "location": j.get("location", "") or "Remote",
+            "tags": [],
+            "description": j.get("snippet", ""),
+            "url": j.get("link", "#"),
+            "source": "jooble",
+        }
+
+    def map_scraper(j):
+        return {
+            "title": j.get("title", ""),
+            "company": j.get("company", ""),
+            "location": j.get("location", "") or "Remote",
+            "tags": j.get("tags", []),
+            "description": j.get("description", ""),
+            "url": j.get("url", "#"),
+            "source": j.get("source", "scraper"),
+        }
+
+    merged = [map_jooble(j) for j in jooble_jobs] + [map_scraper(j) for j in scraped_jobs]
+
+    # Deduplicate by URL
+    seen = set()
+    unique = []
+    for j in merged:
+        u = j.get("url")
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        unique.append(j)
+    return unique
+
+def _filter_jobs(jobs, query, source):
+    """Client-side filter by source and free-text query over multiple fields."""
+    q = (query or "").strip().lower()
+    s = (source or "All").lower()
+    def keep(j):
+        js = j.get("source", "").lower()
+        if s == "jooble":
+            if js != "jooble":
+                return False
+        elif s == "scrapers":
+            # Treat any non-jooble as a scraper
+            if js == "jooble":
+                return False
+        # else: s == all -> no source filter
+        if not q:
+            return True
+        # Prefer matching location first; many scrapers use 'Remote'
+        loc = (j.get("location", "") or "").lower()
+        if q in loc:
+            return True
+        # Consider 'remote' a match if user typed something like 'remote'
+        if q in ("remote", "wfh", "work from home") and ("remote" in loc or loc == ""):
+            return True
+        # Otherwise, perform a soft match against title/company/tags/description
+        blob = " ".join([
+            j.get("title", ""),
+            j.get("company", ""),
+            " ".join(j.get("tags", [])),
+            j.get("description", ""),
+        ]).lower()
+        return q in blob
+    return [j for j in (jobs or []) if keep(j)]
+
+def display_job_recommendations_unified(skills, location):
+    """Display unified job recommendations (Jooble + Scrapers) with filters."""
+    st.markdown(StyleManager.get_job_listing_styles(), unsafe_allow_html=True)
+    st.markdown(StyleManager.get_animation_styles(), unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class="animated-header" style="
+            background-color: #111827;
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        ">
+            <h1 style='color: #ffffff; margin: 0;'>💼 Job Recommendations</h1>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Filters row
+    c1, c2, c3 = st.columns([4, 2, 1])
+    with c1:
+        location_query = st.text_input(
+            "City/Country or keyword",
+            value=location or "",
+            placeholder="e.g., Bengaluru, India, Remote",
+        )
+    with c2:
+        source_filter = st.selectbox("Source", ["All", "Jooble", "Scrapers"], index=0)
+    with c3:
+        fetch = st.button("Fetch jobs")
+
+    # Cache merged results by skills+location
+    cache_key = (tuple((skills or [])[:50]), (location_query or "").strip())
+    if fetch or st.session_state.get("jobs_cache_key") != cache_key:
+        with st.spinner("Fetching jobs..."):
+            jobs_all = _fetch_all_jobs(skills, location_query)
+        st.session_state["jobs_cache_key"] = cache_key
+        st.session_state["jobs_cache"] = jobs_all
+    else:
+        jobs_all = st.session_state.get("jobs_cache", [])
+
+    # Apply filters
+    jobs_filtered = _filter_jobs(jobs_all, location_query, source_filter)
+
+    jooble_count = sum(1 for j in jobs_filtered if j.get("source") == "jooble")
+    scraper_count = sum(1 for j in jobs_filtered if j.get("source") != "jooble")
+    st.markdown(
+        f"""
+        <div style=\"background:#0f172a; border:1px solid #1f2937; border-radius:10px; padding:10px 12px; margin: 6px 0 14px 0; color:#e5e7eb;\">\
+            Showing <b>{len(jobs_filtered)}</b> results • Jooble: {jooble_count} • Scrapers: {scraper_count}\
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not jobs_filtered:
+        st.info("No jobs found. Try clearing filters or using broader location/keywords.")
+        return
+
+    for idx, job in enumerate(jobs_filtered):
+        display_job_card(job, job.get("source", "scraper"))
+        if idx < len(jobs_filtered) - 1:
+            st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
+
 def display_job_recommendations(skills, location):
     """Display job recommendations from multiple APIs"""
     st.markdown(StyleManager.get_job_listing_styles(), unsafe_allow_html=True)
@@ -267,7 +406,9 @@ def display_job_card(job, source):
         description = job.get("description", "")
     
     st.markdown('<div class="job-listing">', unsafe_allow_html=True)
-    st.markdown(f'<div class="job-title">🔹 {job_title}</div>', unsafe_allow_html=True)
+    source_name = (source or "").capitalize()
+    badge = f"<span style='font-size:11px; padding:3px 8px; border:1px solid #374151; border-radius:999px; color:#9ca3af; background:rgba(255,255,255,0.04); margin-left:8px;'>{source_name}</span>"
+    st.markdown(f"<div class=\"job-title\">🔹 {job_title} {badge}</div>", unsafe_allow_html=True)
     
     st.markdown('<div class="job-info-container">', unsafe_allow_html=True)
     st.markdown('<div class="job-info">', unsafe_allow_html=True)
@@ -504,9 +645,9 @@ def main():
                     st.markdown("<br>", unsafe_allow_html=True)
                     search_button = st.button(" Search")
                 
-                # Display job recommendations
+                # Display unified job recommendations (Jooble + Scrapers)
                 if skills:
-                    display_job_recommendations(skills, location_input)
+                    display_job_recommendations_unified(skills, location_input)
                 
                 # Course recommendations
                 course_list = []
