@@ -40,36 +40,7 @@ class JobAPIService:
         except Exception as e:
             st.error(f"Unexpected error with Jooble API: {e}")
             return None
-    
-    @staticmethod
-    def get_jobs_from_adzuna(skill: str, location: str = "India", results: int = 10) -> List[Dict]:
-        """Fetch jobs from Adzuna API"""
-        url = f"https://api.adzuna.com/v1/api/jobs/{Config.ADZUNA_COUNTRY}/search/1"
-        
-        params = {
-            "app_id": Config.ADZUNA_APP_ID,
-            "app_key": Config.ADZUNA_API_KEY,
-            "results_per_page": results,
-            "what": skill,
-            "where": location,
-        }
-        
-        try:
-            response = requests.get(url, params=params, timeout=10)
-            
-            if response.status_code == 200:
-                jobs = response.json()
-                return jobs.get("results", [])
-            else:
-                st.warning(f"Adzuna API returned status code: {response.status_code}")
-                return []
-        
-        except requests.exceptions.RequestException as e:
-            st.error(f"Adzuna API request failed: {e}")
-            return []
-        except Exception as e:
-            st.error(f"Unexpected error with Adzuna API: {e}")
-            return []
+
 
 class YouTubeService:
     """Handles YouTube video information fetching"""
