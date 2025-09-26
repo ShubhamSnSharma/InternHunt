@@ -151,28 +151,123 @@ class ResumeParser:
         return lines
     
     def extract_name(self, text: str) -> Optional[str]:
-        """Extract candidate name using simplified heuristic approach"""
+        """Extract candidate name using improved heuristic approach"""
         # Get first 5 non-empty lines
         top_lines = self._first_nonempty_lines(text, n=5)
         top_text = "\n".join(top_lines)
         
-        # Use spaCy NER on top lines
+        # Method 1: Look for name patterns in the first few lines
+        name_candidates = []
+        
+        # Check first 3 lines for name patterns
+        for i, line in enumerate(top_lines[:3]):
+            # Skip lines that look like contact info, headers, or URLs
+            if self._is_contact_or_header_line(line):
+                continue
+                
+            # Look for capitalized name patterns
+            name = self._extract_name_from_line(line)
+            if name and self._is_valid_name(name):
+                name_candidates.append((name, i))  # (name, line_index)
+        
+        # If we found valid names, return the one from the earliest line
+        if name_candidates:
+            name_candidates.sort(key=lambda x: x[1])  # Sort by line index
+            return name_candidates[0][0]
+        
+        # Method 2: Use spaCy NER as fallback, but with better filtering
         top_doc = self.nlp(top_text)
-        persons = [ent.text.strip() for ent in top_doc.ents if ent.label_ == "PERSON"]
+        persons = []
+        for ent in top_doc.ents:
+            if ent.label_ == "PERSON":
+                person_text = ent.text.strip()
+                # Filter out obvious non-names
+                if self._is_valid_name(person_text) and not self._contains_url_or_email(person_text):
+                    persons.append(person_text)
         
         if persons:
-            # Prefer a 2- or 3-token name
+            # Prefer 2-3 word names, then by length
             persons.sort(key=lambda s: (abs(len(s.split())-2), -len(s)))
             return persons[0]
         
-        # Fallback: first line with 2-4 capitalized words
-        for line in top_lines:
-            tokens = line.split()
-            cap_words = [w for w in tokens if re.match(r"^[A-Z][a-zA-Z'\-]+$", w)]
-            if 1 < len(cap_words) <= 4:
-                return " ".join(cap_words)
+        return None
+    
+    def _is_contact_or_header_line(self, line: str) -> bool:
+        """Check if line contains contact info or headers"""
+        line_lower = line.lower()
+        contact_indicators = [
+            'phone', 'email', 'mobile', 'contact', 'address', 'linkedin', 'github',
+            'curriculum vitae', 'resume', 'cv', 'projects', 'experience', 'education',
+            'skills', 'objective', 'summary', 'profile'
+        ]
+        return any(indicator in line_lower for indicator in contact_indicators)
+    
+    def _extract_name_from_line(self, line: str) -> Optional[str]:
+        """Extract potential name from a single line"""
+        # Remove common prefixes/suffixes
+        line = re.sub(r'^(mr\.?|ms\.?|mrs\.?|dr\.?)\s*', '', line, flags=re.IGNORECASE)
+        
+        # Split into tokens and find capitalized words
+        tokens = line.split()
+        cap_words = []
+        
+        for token in tokens:
+            # Match capitalized words (allowing for hyphens and apostrophes)
+            if re.match(r"^[A-Z][a-zA-Z'\-]+$", token):
+                cap_words.append(token)
+            else:
+                # If we hit a non-capitalized word, stop (names are usually consecutive)
+                break
+        
+        # Return if we have 2-4 capitalized words
+        if 2 <= len(cap_words) <= 4:
+            return " ".join(cap_words)
         
         return None
+    
+    def _is_valid_name(self, name: str) -> bool:
+        """Validate if extracted text looks like a real person's name"""
+        if not name or len(name.strip()) < 2:
+            return False
+        
+        name = name.strip()
+        words = name.split()
+        
+        # Must have 2-4 words
+        if not (2 <= len(words) <= 4):
+            return False
+        
+        # Each word should be 2+ characters and start with capital letter
+        for word in words:
+            if len(word) < 2 or not re.match(r"^[A-Z][a-zA-Z'\-]*$", word):
+                return False
+        
+        # Check for common non-name patterns
+        name_lower = name.lower()
+        non_name_patterns = [
+            'university', 'college', 'institute', 'company', 'corporation', 'inc', 'ltd',
+            'department', 'school', 'academy', 'center', 'centre', 'group', 'team',
+            'project', 'research', 'development', 'engineering', 'technology', 'science',
+            'curriculum', 'vitae', 'resume', 'cv', 'profile', 'summary', 'objective',
+            'software', 'engineer', 'developer', 'analyst', 'manager', 'director',
+            'specialist', 'consultant', 'coordinator', 'administrator', 'supervisor'
+        ]
+        
+        if any(pattern in name_lower for pattern in non_name_patterns):
+            return False
+        
+        # Additional validation: check if it looks like a job title
+        job_title_indicators = ['engineer', 'developer', 'analyst', 'manager', 'specialist', 'consultant']
+        if any(indicator in name_lower for indicator in job_title_indicators):
+            return False
+        
+        return True
+    
+    def _contains_url_or_email(self, text: str) -> bool:
+        """Check if text contains URL or email patterns"""
+        url_pattern = r'https?://|www\.|\.com|\.org|\.net|\.edu|\.gov'
+        email_pattern = r'@'
+        return bool(re.search(url_pattern, text, re.IGNORECASE) or re.search(email_pattern, text))
     
     def parse_resume(self, uploaded_file) -> Dict[str, Any]:
         """Main parsing function"""
