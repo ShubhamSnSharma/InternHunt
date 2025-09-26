@@ -14,18 +14,17 @@ import datetime
 import os
 import nltk
 
-# Initialize NLTK data
-nltk.download('stopwords', quiet=True)
-nltk.download('punkt', quiet=True)
-nltk.download('wordnet', quiet=True)
-nltk.download('averaged_perceptron_tagger', quiet=True)
-
 # Import custom modules
 from config import Config
-from database import db_manager
+from database import DatabaseManager
+db_manager = DatabaseManager()
 from api_services import JobAPIService
 from resume_parser import ResumeParser
 from styles import StyleManager
+from utils import AnalyticsUtils
+from chat_service import chat_ollama, build_resume_context, check_ollama_health, get_suggested_questions
+from streamlit.components.v1 import html as st_html  # legacy; floating chat removed
+from job_scrapers import scrape_all
 from Courses import ds_course, web_course, android_course, ios_course, uiux_course
 
 # -----------------------------
@@ -53,9 +52,32 @@ def initialize_app():
     if "theme_mode" not in st.session_state:
         st.session_state.theme_mode = "dark"
     
+    # Ensure NLTK data only once per session
+    if not st.session_state.get("nltk_ready"):
+        nltk.download('stopwords', quiet=True)
+        nltk.download('punkt', quiet=True)
+        nltk.download('wordnet', quiet=True)
+        nltk.download('averaged_perceptron_tagger', quiet=True)
+        st.session_state["nltk_ready"] = True
+    
     # Apply styles
     StyleManager.apply_global_styles()
     StyleManager.apply_theme_styles(st.session_state.theme_mode)
+    # Sidebar chat styles (message bubbles)
+    st.markdown(
+        """
+        <style>
+        .sb-chat-title {font-weight: 700; font-size: 18px; margin-bottom: 8px;}
+        .sb-chip {display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; margin-right:6px; background:rgba(255,255,255,0.06);}
+        .msg-wrap {max-height: 58vh; overflow-y: auto; padding-right: 4px;}
+        .msg {margin: 6px 0; padding: 10px 12px; border-radius: 10px; line-height: 1.35;}
+        .msg-user {background: rgba(56,68,255,0.18); border: 1px solid rgba(56,68,255,0.35);} 
+        .msg-assist {background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);} 
+        .msg-role {font-size: 11px; opacity: 0.7; margin-bottom: 4px;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 @st.cache_resource(show_spinner=False)
 def get_resume_parser():
@@ -197,30 +219,6 @@ def display_job_recommendations(skills, location):
         </div>
     """, unsafe_allow_html=True)
     
-    # Adzuna jobs
-    st.markdown("""
-        <div class="animated-header" style="
-            background-color: #1e1e1e;
-            padding: 0.8rem;
-            border-left: 6px solid #4ade80;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-        ">
-            <h2 style='color: #ffffff; margin: 0;'>1. From Adzuna</h2>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    top_skill = skills[0] if skills else "Developer"
-    adzuna_jobs = JobAPIService.get_jobs_from_adzuna(top_skill, location, 5)
-    
-    if adzuna_jobs:
-        for i, job in enumerate(adzuna_jobs):
-            display_job_card(job, "adzuna")
-            if i < len(adzuna_jobs) - 1:
-                st.markdown('<div class="separator"></div>', unsafe_allow_html=True)
-    else:
-        st.info("No jobs found from Adzuna for the specified location.")
-    
     # Jooble jobs
     st.markdown("""
         <div class="animated-header" style="
@@ -231,7 +229,7 @@ def display_job_recommendations(skills, location):
             margin-top: 2rem;
             margin-bottom: 1rem;
         ">
-            <h2 style='color: #ffffff; margin: 0;'>2. From Jooble</h2>
+            <h2 style='color: #ffffff; margin: 0;'>From Jooble</h2>
         </div>
     """, unsafe_allow_html=True)
     
@@ -245,6 +243,8 @@ def display_job_recommendations(skills, location):
     else:
         st.warning(f"⚠ No jobs found from Jooble in `{location or 'Remote'}`.")
 
+    # Removed Remotive provider section per request
+
 def display_job_card(job, source):
     """Display individual job card"""
     if source == "adzuna":
@@ -253,12 +253,18 @@ def display_job_card(job, source):
         job_location = job.get("location", {}).get("display_name", "Location Not Available")
         job_link = job.get("redirect_url", "#")
         description = job.get("description", "")
-    else:  # jooble
+    elif source == "jooble":  # jooble
         job_title = job.get("title", "No Title")
         company_name = job.get("company", "Unknown Company")
         job_location = job.get("location", "Location Not Available")
         job_link = job.get("link", "#")
         description = job.get("snippet", "")
+    else:  # generic mapping for any future providers
+        job_title = job.get("title", "No Title")
+        company_name = job.get("company", "Unknown Company")
+        job_location = job.get("location", "Remote")
+        job_link = job.get("url", "#")
+        description = job.get("description", "")
     
     st.markdown('<div class="job-listing">', unsafe_allow_html=True)
     st.markdown(f'<div class="job-title">🔹 {job_title}</div>', unsafe_allow_html=True)
@@ -396,9 +402,21 @@ def main():
             with open(save_path, "wb") as f:
                 f.write(pdf_file.getbuffer())
             
-            # Parse resume
-            parser = get_resume_parser()
-            resume_data = parser.parse_resume(pdf_file)
+            # Track current resume to reset chat state if needed
+            try:
+                current_resume_id = f"{save_path}:{os.path.getsize(save_path)}"
+            except Exception:
+                current_resume_id = save_path
+            if st.session_state.get('resume_id') != current_resume_id:
+                # New file uploaded: parse and cache
+                parser = get_resume_parser()
+                resume_data = parser.parse_resume(pdf_file)
+                st.session_state['resume_id'] = current_resume_id
+                st.session_state['resume_data'] = resume_data
+                st.session_state['chat_messages'] = []
+            else:
+                # Use cached parsed resume
+                resume_data = st.session_state.get('resume_data')
             
             if resume_data:
                 # Display candidate info
@@ -428,11 +446,55 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
                 
+                # Compute and display resume score with breakdown
+                breakdown = AnalyticsUtils.calculate_resume_score_breakdown(resume_data)
+                score = breakdown["total"]
+                components = breakdown["components"]
+                suggestions = breakdown.get("suggestions", [])
+
+                with st.container():
+                    st.markdown(
+                        """
+                        <div style="background-color: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid #1f2937; display: inline-block; margin-bottom: 12px;">
+                            <div style="color:#9ca3af; font-size:12px;">Resume Score</div>
+                            <div style="color:#fff; font-size:22px; font-weight:700;">{}/100</div>
+                        </div>
+                        """.format(score),
+                        unsafe_allow_html=True,
+                    )
+                    st.progress(score/100)
+
+                with st.expander("Why this score?"):
+                    max_map = {"basic_info": 15, "skills": 30, "sections": 25, "achievements": 15, "recency": 10, "links": 5}
+                    cols = st.columns(2)
+                    for i, key in enumerate(["basic_info", "skills", "sections", "achievements", "recency", "links"]):
+                        if key in components:
+                            val = components[key]
+                            with cols[i % 2]:
+                                st.write(f"{key.replace('_', ' ').title()}: {val}/{max_map.get(key, 0)}")
+                                denom = max_map.get(key, 1)
+                                st.progress(min(float(val)/float(denom), 1.0))
+
+                if suggestions:
+                    st.markdown("### Suggestions to improve your resume")
+                    for s in suggestions:
+                        st.markdown(f"- {s}")
+
                 # Display skills
                 skills = resume_data.get('skills', [])
                 if skills:
                     categorized_skills = categorize_skills(skills)
                     display_skills(categorized_skills)
+                
+                # Cache resume context for chat so first turn has context
+                try:
+                    st.session_state['resume_context'] = build_resume_context(resume_data)
+                except Exception:
+                    st.session_state['resume_context'] = None
+
+                # Defer chat rendering to bottom of page
+                st.session_state['render_chat_at_bottom'] = True
+                
                 
                 # Job search
                 col1, col2 = st.columns([6, 1])
@@ -440,7 +502,7 @@ def main():
                     location_input = st.text_input("", placeholder="Enter your Preferred Location (Leave blank for remote jobs)", key="search_location")
                 with col2:
                     st.markdown("<br>", unsafe_allow_html=True)
-                    search_button = st.button("🔍 Search")
+                    search_button = st.button(" Search")
                 
                 # Display job recommendations
                 if skills:
@@ -468,7 +530,7 @@ def main():
                     db_manager.insert_user_data(
                         name=resume_data['name'],
                         email=resume_data['email'],
-                        res_score=85,  # Default score
+                        res_score=score,
                         timestamp=timestamp,
                         no_of_pages=1,  # Default
                         reco_field="General",
@@ -477,11 +539,163 @@ def main():
                         recommended_skills=[],
                         courses=recommended_courses if 'recommended_courses' in locals() else []
                     )
+
+                # Render chat at the very bottom
+                if st.session_state.get('render_chat_at_bottom'):
+                    st.markdown(StyleManager.get_chat_styles(), unsafe_allow_html=True)
+                    st.markdown("""
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <div class="chat-title">
+                                    <div class="chat-avatar">🤖</div>
+                                    <span>InternHunt Assistant</span>
+                                </div>
+                                <div class="chat-status">
+                                    <div class="status-dot"></div>
+                                    <span>Online</span>
+                                </div>
+                            </div>
+                    """, unsafe_allow_html=True)
+
+                    st.markdown("""
+                        <div class="chat-controls">
+                            <div class="control-group">
+                                <span class="control-label">Style:</span>
+                    """, unsafe_allow_html=True)
+
+                    col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
+                    with col1:
+                        chat_style = st.selectbox("", ["Concise", "Detailed", "Short"], index=0, key="chat_style", label_visibility="collapsed")
+                    with col2:
+                        st.session_state['chat_use_context'] = st.checkbox("Use resume context", value=True, key="chat_use_ctx")
+                    with col3:
+                        if st.button("🗑️ Clear", key="chat_clear", help="Clear chat history"):
+                            st.session_state['chat_messages'] = []
+                            st.toast("Chat cleared!")
+                            st.rerun()
+                    with col4:
+                        if st.button("🔥 Warm", key="chat_warm", help="Warm up the model"):
+                            with st.spinner("Warming up model..."):
+                                try:
+                                    health = check_ollama_health()
+                                    if health['status'] == 'healthy':
+                                        _ = chat_ollama([{ "role": "user", "content": "Hello"}], None, "Respond with 'Ready to help!'")
+                                        st.success("Model warmed up! 🚀")
+                                    else:
+                                        st.error(f"Ollama not ready: {health.get('error', 'Unknown error')}")
+                                except Exception as e:
+                                    st.error(f"Failed to warm up: {e}")
+
+                    st.markdown("</div></div>", unsafe_allow_html=True)
+
+                    health = check_ollama_health()
+                    if health['status'] != 'healthy':
+                        st.error(f"⚠️ Ollama connection issue: {health.get('error', 'Unknown error')}")
+                        st.info("Make sure Ollama is running: `ollama serve`")
+                    elif not health.get('model_exists', False):
+                        st.warning(f"⚠️ Model '{health['model']}' not found. Available models: {', '.join(health.get('available_models', []))}")
+
+                    if 'chat_messages' not in st.session_state or not st.session_state['chat_messages']:
+                        suggested_questions = get_suggested_questions(resume_data)
+                        if suggested_questions:
+                            st.markdown("""
+                                <div class="suggested-questions">
+                                    <h4>💡 Try asking:</h4>
+                                    <div class="question-chips">
+                            """, unsafe_allow_html=True)
+                            cols = st.columns(2)
+                            for i, question in enumerate(suggested_questions[:6]):
+                                with cols[i % 2]:
+                                    if st.button(f"💬 {question}", key=f"suggest_{i}", help="Click to ask this question"):
+                                        st.session_state['suggested_question'] = question
+                                        st.rerun()
+                            st.markdown("</div></div>", unsafe_allow_html=True)
+
+                    if 'suggested_question' in st.session_state:
+                        user_text = st.session_state['suggested_question']
+                        del st.session_state['suggested_question']
+                    else:
+                        user_text = None
+
+                    if 'chat_messages' not in st.session_state:
+                        st.session_state['chat_messages'] = []
+                    for m in st.session_state['chat_messages'][-50:]:
+                        role = m.get('role', 'user')
+                        content = m.get('content', '') or ''
+                        timestamp = m.get('timestamp', '')
+                        if role == 'user':
+                            st.markdown(f"""
+                                <div class="message-container message-user">
+                                    <div class="message-bubble user">{content}</div>
+                                    <div class="message-time">{timestamp}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                                <div class="message-container message-assistant">
+                                    <div class="message-bubble assistant">{content}</div>
+                                    <div class="message-time">{timestamp}</div>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                    if user_text is None:
+                        with st.form("chat_form", clear_on_submit=True):
+                            c_in1, c_in2 = st.columns([10, 1])
+                            with c_in1:
+                                user_text_value = st.text_input("", placeholder="Ask me anything about your resume, career, or job search...", key="chat_text_input")
+                            with c_in2:
+                                send = st.form_submit_button("➤")
+                        if send and (user_text_value or "").strip():
+                            user_text = (user_text_value or "").strip()
+                    if user_text:
+                        timestamp = datetime.datetime.now().strftime("%H:%M")
+                        st.session_state['chat_messages'].append({
+                            "role": "user",
+                            "content": user_text,
+                            "timestamp": timestamp
+                        })
+                        typing_placeholder = st.empty()
+                        typing_placeholder.markdown("""
+                            <div class="typing-indicator">
+                                <span>InternHunt Assistant is typing</span>
+                                <div class="typing-dots">
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                    <div class="typing-dot"></div>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        context = st.session_state.get('resume_context') if st.session_state.get('chat_use_context', True) else None
+                        if chat_style == "Concise":
+                            sys = "You are InternHunt Assistant. Be concise and practical. Use short bullet points and emojis sparingly."
+                        elif chat_style == "Detailed":
+                            sys = "You are InternHunt Assistant. Provide detailed bullet points with 1-line rationale for each. Be comprehensive but organized."
+                        else:
+                            sys = "You are InternHunt Assistant. Answer in 2-3 short sentences, directly addressing the user's request. Be friendly and encouraging."
+                        try:
+                            reply = chat_ollama(st.session_state['chat_messages'], resume_context=context, system_prompt=sys)
+                            typing_placeholder.empty()
+                            st.session_state['chat_messages'].append({
+                                "role": "assistant",
+                                "content": reply,
+                                "timestamp": datetime.datetime.now().strftime("%H:%M")
+                            })
+                            st.rerun()
+                        except Exception as e:
+                            typing_placeholder.empty()
+                            error_msg = f"Sorry, I encountered an error: {str(e)}. Please try again."
+                            st.session_state['chat_messages'].append({
+                                "role": "assistant",
+                                "content": error_msg,
+                                "timestamp": datetime.datetime.now().strftime("%H:%M")
+                            })
+                            st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.error("Could not parse the resume. Please ensure it's a valid PDF with text content.")
     
     elif choice == 'Admin':
-        st.subheader("📊 Admin Dashboard")
+        st.subheader(" Admin Dashboard")
         
         # Display user data
         user_data = db_manager.get_user_data(50)
@@ -494,7 +708,7 @@ def main():
             
             # Download link
             st.markdown(
-                get_table_download_link(df, "user_data.csv", "📥 Download Data as CSV"),
+                get_table_download_link(df, "user_data.csv", " Download Data as CSV"),
                 unsafe_allow_html=True
             )
         else:
