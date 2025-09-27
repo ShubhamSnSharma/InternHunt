@@ -1,0 +1,39 @@
+name: internhunt
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - pip
+  - numpy=2.0.0
+  - pip:
+    - torch==2.8.0
+    - torchvision==0.23.0
+    - torchaudio==2.8.0
+    - -r requirements.txt
+    - spacy
+    - python-dotenv
+    - streamlit
+    - pandas
+    - scikit-learn
+    - nltk
+    - beautifulsoup4
+    - requests
+    - python-multipart
+    - python-docx
+    - PyPDF2
+    - pdfminer.six
+    - openpyxl
+    - spacy-model-en-core-web-sm
+
+  # Additional system dependencies
+  - libgcc  # Required for some compiled extensions
+  - libstdcxx-ng  # Required for some compiled extensions
+  - openblas  # Required for numerical operations
+
+  # Post-installation commands
+  - python -m spacy download en_core_web_sm
+
+  # Create necessary directories
+  - mkdir -p data/raw data/processed models Uploaded_Resumes
