@@ -12,7 +12,7 @@ torchaudio>=2.1.0
 # NLP
 sentence-transformers>=2.5.1
 transformers>=4.36.2
-nltk>=3.8.1
+nltk==3.8.1
 spacy>=3.7.4
 
 # Web & API
