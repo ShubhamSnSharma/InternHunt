@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+echo "=== Setting up Conda environment ==="
+
+# Initialize conda for shell
+source $HOME/miniconda3/etc/profile.d/conda.sh
+
+# Create and activate the environment
+echo "Creating conda environment..."
+conda env create -f environment.yml
+conda activate internhunt
+
+# Install NLTK data
+echo "Downloading NLTK data..."
+python -c "import nltk; nltk.download('punkt')"
+python -c "import nltk; nltk.download('stopwords')"
+python -c "import nltk; nltk.download('wordnet')"
+python -c "import nltk; nltk.download('averaged_perceptron_tagger')"
+
+echo "=== Environment setup complete ==="
