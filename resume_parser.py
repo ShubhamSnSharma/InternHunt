@@ -14,15 +14,17 @@ def load_spacy_model():
     """Load spaCy model with caching"""
     try:
         return spacy.load("en_core_web_sm")
-    except OSError:
-        try:
-            import subprocess
-            import sys
-            subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
-            return spacy.load("en_core_web_sm")
-        except Exception:
-            st.error("spaCy model 'en_core_web_sm' is not installed and could not be downloaded automatically.")
-            raise
+    except OSError as e:
+        st.error("""
+        Error loading spaCy model 'en_core_web_sm'. 
+        Please install it by running: 
+        ```
+        python -m spacy download en_core_web_sm
+        ```
+        and add 'en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz' to your requirements.txt
+        """)
+        st.error(f"Full error: {str(e)}")
+        raise
 
 class ResumeParser:
     """Enhanced resume parser using spaCy and rule-based extraction"""
