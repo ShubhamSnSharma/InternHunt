@@ -1,51 +1,74 @@
 name: internhunt
 channels:
-  - pytorch
   - conda-forge
   - defaults
+  - pytorch
+
 dependencies:
+  # Base Python
   - python=3.10.0
   - pip
-  - pip:
-    - -r requirements.txt
-    # Explicitly list all pip packages from requirements.txt
-    - numpy==1.26.0
-    - pandas==2.2.0
-    - scikit-learn==1.4.0
-    - scipy==1.11.0
-    - torch==2.3.0
-    - torchvision==0.18.0
-    - torchaudio==2.1.0
-    - sentence-transformers==2.5.1
-    - transformers==4.36.2
-    - nltk==3.8.1
-    - spacy==3.7.4
-    - streamlit==1.32.0
-    - fastapi==0.110.0
-    - uvicorn==0.27.0
-    - python-multipart==0.0.9
-    - requests==2.31.0
-    - beautifulsoup4==4.12.2
-    - lxml==5.1.0
-    - python-docx==1.1.0
-    - PyPDF2==3.0.1
-    - pypdf==6.0.0
-    - pdfminer.six==20231228
-    - pymysql==1.1.0
-    - selenium==4.16.0
-    - webdriver-manager==4.0.1
-    - python-dotenv==1.0.0
-    - kaggle==1.5.13
-    - fuzzywuzzy==0.18.0
-    - python-Levenshtein==0.12.2
-    - pillow==10.0.0
-    - spacy-model-en-core-web-sm==3.7.1
-
+  
+  # Core data science
+  - numpy=1.26.0
+  - pandas=2.2.0
+  - scikit-learn=1.4.0
+  - scipy=1.11.0
+  
+  # ML/DL
+  - pytorch=2.3.0
+  - torchvision=0.18.0
+  - torchaudio=2.1.0
+  - sentence-transformers=2.5.1
+  - transformers=4.36.2
+  
+  # NLP
+  - nltk=3.8.1
+  - spacy=3.7.4
+  - spacy-model-en-core-web-sm=3.7.1
+  - python-levenshtein=0.12.2
+  - fuzzywuzzy=0.18.0
+  
+  # Web & API
+  - streamlit=1.32.0
+  - fastapi=0.110.0
+  - uvicorn=0.27.0
+  - python-multipart=0.0.9
+  - requests=2.31.0
+  - beautifulsoup4=4.12.2
+  - lxml=5.1.0
+  
+  # Document processing
+  - python-docx=1.1.0
+  - pypdf2=3.0.1
+  - pypdf=6.0.0
+  - pdfminer.six=20231228
+  
+  # Database
+  - pymysql=1.1.0
+  
+  # Web automation
+  - selenium=4.16.0
+  - webdriver-manager=4.0.1
+  
+  # Utilities
+  - python-dotenv=1.0.0
+  - kaggle=1.5.13
+  - pillow=10.0.0
+  
   # System dependencies
   - libgcc
   - libstdcxx-ng
   - openblas
 
-  # Post-installation commands
+  # Install pip packages
+  - pip:
+    - -r requirements.txt
+
+# Post-installation commands
+post_install:
   - python -m spacy download en_core_web_sm
-  - python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
+  - python -c "import nltk; nltk.download('punkt')"
+  - python -c "import nltk; nltk.download('stopwords')"
+  - python -c "import nltk; nltk.download('wordnet')"
+  - python -c "import nltk; nltk.download('averaged_perceptron_tagger')"
