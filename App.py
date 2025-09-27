@@ -12,34 +12,9 @@ import random
 import time
 import datetime
 import os
-import sys
-
-# NLTK data handling
 import nltk
 
-# List of required NLTK data
-NLTK_DATA = [
-    'tokenizers/punkt',
-    'corpora/stopwords',
-    'corpora/wordnet',
-    'taggers/averaged_perceptron_tagger'
-]
-
-# Download NLTK data if not present
-def ensure_nltk_data():
-    try:
-        for item in NLTK_DATA:
-            nltk.data.find(item)
-    except LookupError:
-        with st.spinner("Downloading required NLTK data (this will only happen once)..."):
-            for item in NLTK_DATA:
-                nltk.download(item.split('/')[-1])
-        st.experimental_rerun()  # Restart to ensure data is loaded
-
-# Ensure NLTK data is available
-ensure_nltk_data()
-
-# Import custom modules after NLTK is set up
+# Import custom modules
 from config import Config
 from database import DatabaseManager
 db_manager = DatabaseManager()
@@ -48,7 +23,7 @@ from resume_parser import ResumeParser
 from styles import StyleManager
 from utils import AnalyticsUtils
 from chat_service import chat_ollama, build_resume_context, check_ollama_health, get_suggested_questions
-from streamlit.components.v1 import html as st_html
+from streamlit.components.v1 import html as st_html  # legacy; floating chat removed
 from job_scrapers import scrape_all
 from Courses import ds_course, web_course, android_course, ios_course, uiux_course
 
