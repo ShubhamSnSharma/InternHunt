@@ -13,6 +13,24 @@ import time
 import datetime
 import os
 import nltk
+import sys
+
+# Ensure NLTK data is available
+try:
+    # Try to import NLTK data
+    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('corpora/stopwords')
+    nltk.data.find('corpora/wordnet')
+    nltk.data.find('taggers/averaged_perceptron_tagger')
+except LookupError:
+    # If any data is missing, download it
+    st.warning("Downloading required NLTK data... (this will only happen once)")
+    import nltk
+    nltk.download('punkt')
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+    nltk.download('averaged_perceptron_tagger')
+    st.experimental_rerun()  # Restart the app to ensure NLTK data is available
 
 # Import custom modules
 from config import Config
