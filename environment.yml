@@ -4,36 +4,48 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.13
+  - python=3.10.0
   - pip
-  - numpy=2.0.0
   - pip:
-    - torch==2.8.0
-    - torchvision==0.23.0
-    - torchaudio==2.8.0
     - -r requirements.txt
-    - spacy
-    - python-dotenv
-    - streamlit
-    - pandas
-    - scikit-learn
-    - nltk
-    - beautifulsoup4
-    - requests
-    - python-multipart
-    - python-docx
-    - PyPDF2
-    - pdfminer.six
-    - openpyxl
-    - spacy-model-en-core-web-sm
+    # Explicitly list all pip packages from requirements.txt
+    - numpy==1.26.0
+    - pandas==2.2.0
+    - scikit-learn==1.4.0
+    - scipy==1.11.0
+    - torch==2.3.0
+    - torchvision==0.18.0
+    - torchaudio==2.1.0
+    - sentence-transformers==2.5.1
+    - transformers==4.36.2
+    - nltk==3.8.1
+    - spacy==3.7.4
+    - streamlit==1.32.0
+    - fastapi==0.110.0
+    - uvicorn==0.27.0
+    - python-multipart==0.0.9
+    - requests==2.31.0
+    - beautifulsoup4==4.12.2
+    - lxml==5.1.0
+    - python-docx==1.1.0
+    - PyPDF2==3.0.1
+    - pypdf==6.0.0
+    - pdfminer.six==20231228
+    - pymysql==1.1.0
+    - selenium==4.16.0
+    - webdriver-manager==4.0.1
+    - python-dotenv==1.0.0
+    - kaggle==1.5.13
+    - fuzzywuzzy==0.18.0
+    - python-Levenshtein==0.12.2
+    - pillow==10.0.0
+    - spacy-model-en-core-web-sm==3.7.1
 
-  # Additional system dependencies
-  - libgcc  # Required for some compiled extensions
-  - libstdcxx-ng  # Required for some compiled extensions
-  - openblas  # Required for numerical operations
+  # System dependencies
+  - libgcc
+  - libstdcxx-ng
+  - openblas
 
   # Post-installation commands
   - python -m spacy download en_core_web_sm
-
-  # Create necessary directories
-  - mkdir -p data/raw data/processed models Uploaded_Resumes
+  - python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
