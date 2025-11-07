@@ -1,0 +1,16 @@
+[theme]
+# Match your custom purple-indigo color scheme from styles.py
+base="dark"
+primaryColor="#6366F1"           # Indigo-500 (matches your primary color)
+backgroundColor="#0D1429"        # Your dark_bg
+secondaryBackgroundColor="#1A1F3A"  # Your dark_surface
+textColor="#F8FAFC"              # Your text-primary
+font="sans serif"
+
+[server]
+maxUploadSize = 50
+enableXsrfProtection = true
+enableCORS = false
+
+[browser]
+gatherUsageStats = false
