@@ -41,35 +41,57 @@ def _match_any(text: str, keywords: List[str]) -> bool:
 # ---------------- Internshala ----------------
 
 def scrape_internshala(skills: List[str], location: str = "", max_pages: int = 1) -> List[Dict]:
-    """Scrape Internshala internship listings.
-    Note: Public pages are paginated; we keep it light with max_pages.
-    """
+    """Scrape Internshala internship listings using correct HTML selectors."""
     jobs: List[Dict] = []
     base = "https://internshala.com/internships"
-    params_common = []
-    if location:
-        params_common.append(f"location={requests.utils.quote(location)}")
-    query = "&".join(params_common) if params_common else ""
 
     for page in range(1, max_pages + 1):
-        url = f"{base}?page={page}{('&' + query) if query else ''}"
+        url = f"{base}?page={page}" if page > 1 else base
         try:
-            r = requests.get(url, headers=HEADERS, timeout=10)
+            r = requests.get(url, headers=HEADERS, timeout=12)
             if r.status_code != 200:
                 continue
             soup = BeautifulSoup(r.text, "lxml")
-            cards = soup.select("div.container-fluid.individual_internship")
-            for card in cards:
-                title = (card.select_one("a.job-title") or card.select_one("h3\n a")).get_text(strip=True) if card else "Internship"
-                company = (card.select_one("a.link_display_like_text") or card.select_one("div.company_name")).get_text(strip=True) if card else ""
-                loc_el = card.select_one("a.location_link") or card.select_one("span#location_names")
-                location_text = loc_el.get_text(strip=True) if loc_el else ""
-                stipend = (card.select_one("span.stipend") or card.select_one("div.stipend")).get_text(strip=True) if card else None
-                date_posted = (card.select_one("div.status-container") or card.select_one("div.other_detail_item")).get_text(strip=True) if card else None
-                link_el = card.select_one("a.view_detail_button") or card.select_one("a.job-title")
-                link = "https://internshala.com" + link_el.get("href") if link_el and link_el.get("href") else url
+            cards = soup.select("div.individual_internship")
 
-                text_blob = " ".join([title or "", company or "", location_text or ""]).lower()
+            for card in cards:
+                # Title
+                title_el = card.select_one(".job-internship-name a") or card.select_one("a.job-title-href")
+                title = title_el.get_text(strip=True) if title_el else "Internship"
+
+                # URL via data-href attribute
+                data_href = card.get("data-href")
+                if isinstance(data_href, list):
+                    data_href_str = " ".join(data_href).strip()
+                else:
+                    data_href_str = (data_href or "").strip()
+                link = ("https://internshala.com" + data_href_str) if data_href_str else url
+
+                # Company
+                comp_el = card.select_one(".company-name") or card.select_one("h4 a")
+                company = comp_el.get_text(strip=True) if comp_el else ""
+
+                # Location
+                loc_el = card.select_one("#location_names") or card.select_one(".locations a") or card.select_one(".location_link")
+                location_text = loc_el.get_text(strip=True) if loc_el else ""
+
+                # Stipend
+                stip_el = card.select_one("span.stipend")
+                stipend = stip_el.get_text(strip=True) if stip_el else None
+
+                # Duration from .detail-row-1 items
+                dur = None
+                for item in card.select(".detail-row-1 .row-1-item"):
+                    txt = item.get_text(strip=True)
+                    if any(x in txt.lower() for x in ["month", "week", "day"]) and "\u20b9" not in txt:
+                        dur = txt
+                        break
+
+                # Description snippet
+                desc_el = card.select_one(".job-snippet, .internship_about, .desc")
+                desc = desc_el.get_text(" ", strip=True) if desc_el else None
+
+                text_blob = " ".join([title, company, location_text, desc or ""]).lower()
                 if not _match_any(text_blob, skills):
                     continue
 
@@ -77,13 +99,79 @@ def scrape_internshala(skills: List[str], location: str = "", max_pages: int = 1
                     "title": title,
                     "company": company,
                     "location": location_text,
-                    "tags": ["internship"],
-                    "salary": stipend,
-                    "posted_at": date_posted,
+                    "stipend": stipend,
+                    "duration": dur,
+                    "description": desc,
+                    "posted_at": None,
                     "url": link,
                     "source": "internshala",
                 })
-            time.sleep(1)
+            time.sleep(0.5)
+        except Exception:
+            continue
+    return jobs
+
+from urllib.parse import quote_plus
+
+def scrape_internshala_by_keywords(query: str, location: str = "India", max_pages: int = 1) -> List[Dict]:
+    """Scrape Internshala using keyword URL pattern with correct HTML selectors."""
+    # Delegate to api_services implementation which has been verified against live pages
+    try:
+        from api_services import scrape_internshala_by_keywords as _impl
+        return _impl(query, location, max_pages)
+    except ImportError:
+        pass
+
+    # Fallback inline implementation
+    jobs: List[Dict] = []
+    q = quote_plus((query or "").strip())
+    loc = quote_plus((location or "India").strip())
+    base = f"https://internshala.com/internships/keywords-{q}"
+    if loc and location.lower() not in ("india", ""):
+        base += f"/in-{loc}"
+
+    for page in range(1, max_pages + 1):
+        url = base if page == 1 else f"{base}?page={page}"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=12)
+            if r.status_code != 200:
+                continue
+            soup = BeautifulSoup(r.text, "lxml")
+            cards = soup.select("div.individual_internship")
+            for card in cards:
+                title_el = card.select_one(".job-internship-name a") or card.select_one("a.job-title-href")
+                title = title_el.get_text(strip=True) if title_el else "Internship"
+                data_href = card.get("data-href")
+                if isinstance(data_href, list):
+                    data_href_str = " ".join(data_href).strip()
+                else:
+                    data_href_str = (data_href or "").strip()
+                link = ("https://internshala.com" + data_href_str) if data_href_str else url
+                comp_el = card.select_one(".company-name") or card.select_one("h4 a")
+                company = comp_el.get_text(strip=True) if comp_el else ""
+                loc_el = card.select_one("#location_names") or card.select_one(".locations a")
+                location_text = loc_el.get_text(strip=True) if loc_el else location
+                stip_el = card.select_one("span.stipend")
+                stipend = stip_el.get_text(strip=True) if stip_el else None
+                duration = None
+                for item in card.select(".detail-row-1 .row-1-item"):
+                    txt = item.get_text(strip=True)
+                    if any(x in txt.lower() for x in ["month", "week", "day"]) and "\u20b9" not in txt:
+                        duration = txt
+                        break
+                desc_el = card.select_one(".job-snippet, .internship_about, .desc")
+                desc = desc_el.get_text(" ", strip=True) if desc_el else None
+                jobs.append({
+                    "title": title,
+                    "company": company,
+                    "location": location_text,
+                    "stipend": stipend,
+                    "duration": duration,
+                    "description": desc,
+                    "url": link,
+                    "source": "internshala",
+                })
+            time.sleep(0.5)
         except Exception:
             continue
     return jobs
@@ -107,10 +195,17 @@ def scrape_github_repos(skills: List[str], max_pages: int = 1) -> List[Dict]:
             items = soup.select("li.repo-list-item, div.search-title + div.mt-n1")
             for it in items:
                 a = it.select_one("a.v-align-middle") or it.select_one("a.Link--primary")
-                if not a or not a.get("href"):
+                if not a:
                     continue
-                full_name = a.get("href").strip("/")
-                repo_url = "https://github.com" + a.get("href")
+                href_val = a.get("href")
+                if isinstance(href_val, list):
+                    href_str = " ".join(href_val).strip()
+                else:
+                    href_str = (href_val or "").strip()
+                if not href_str:
+                    continue
+                full_name = href_str.strip("/")
+                repo_url = "https://github.com" + href_str
                 desc_el = it.select_one("p")
                 desc = desc_el.get_text(strip=True) if desc_el else ""
                 meta = it.get_text(" ", strip=True).lower()
@@ -146,13 +241,24 @@ def scrape_remoteok(skills: List[str], location: str = "", max_pages: int = 1) -
         soup = BeautifulSoup(r.text, "lxml")
         rows = soup.select("tr.job")
         for row in rows:
-            title = (row.select_one("td.position h2") or row.select_one("a.preventLink")).get_text(strip=True) if row else ""
-            company = (row.select_one("td.company h3") or row.select_one("span.companyLink")).get_text(strip=True) if row else ""
-            tags = [t.get_text(strip=True) for t in row.select("td.tags a")]
-            location_text = (row.select_one("div.location") or row.select_one("div.location.tooltip")).get_text(strip=True) if row else "Remote"
-            link_el = row.select_one("a.preventLink") or row.select_one("a")
+            title_el = row.select_one("td.position h2") or row.select_one("a.preventLink") if row else None
+            title = title_el.get_text(strip=True) if title_el else ""
+            
+            comp_el = row.select_one("td.company h3") or row.select_one("span.companyLink") if row else None
+            company = comp_el.get_text(strip=True) if comp_el else ""
+            
+            tags = [t.get_text(strip=True) for t in row.select("td.tags a")] if row else []
+            
+            loc_el = row.select_one("div.location") or row.select_one("div.location.tooltip") if row else None
+            location_text = loc_el.get_text(strip=True) if loc_el else "Remote"
+            
+            link_el = row.select_one("a.preventLink") or row.select_one("a") if row else None
             link_href = link_el.get("href") if link_el else None
-            link = ("https://remoteok.com" + link_href) if link_href and link_href.startswith("/") else (link_href or base)
+            if isinstance(link_href, list):
+                link_href_str = " ".join(link_href).strip()
+            else:
+                link_href_str = (link_href or "").strip()
+            link = ("https://remoteok.com" + link_href_str) if link_href_str and link_href_str.startswith("/") else (link_href_str or base)
             text_blob = " ".join([title or "", company or "", " ".join(tags)]).lower()
             if not _match_any(text_blob, skills):
                 continue
@@ -176,11 +282,25 @@ def scrape_all(skills: List[str], location: str = "") -> List[Dict]:
     """Run all scrapers and return a combined list (deduplicated by URL)."""
     skills = [s for s in (skills or []) if s]
     collected = []
-    for fn in (scrape_internshala, scrape_github_repos, scrape_remoteok):
-        try:
-            collected.extend(fn(skills, location) if fn is not scrape_github_repos else fn(skills))
-        except Exception:
-            continue
+    
+    # Run scrape_internshala
+    try:
+        collected.extend(scrape_internshala(skills, location))
+    except Exception:
+        pass
+
+    # Run scrape_github_repos
+    try:
+        collected.extend(scrape_github_repos(skills))
+    except Exception:
+        pass
+
+    # Run scrape_remoteok
+    try:
+        collected.extend(scrape_remoteok(skills, location))
+    except Exception:
+        pass
+
     # Dedup by URL
     seen = set()
     unique = []

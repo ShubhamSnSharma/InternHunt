@@ -1,0 +1,253 @@
+{
+  "rows_after_dedup": 166,
+  "class_count": 25,
+  "classes": {
+    "Advocate": 10,
+    "Arts": 6,
+    "Automation Testing": 7,
+    "Blockchain": 5,
+    "Business Analyst": 6,
+    "Civil Engineer": 6,
+    "Data Science": 10,
+    "Database": 11,
+    "DevOps Engineer": 7,
+    "DotNet Developer": 7,
+    "ETL Developer": 5,
+    "Electrical Engineering": 5,
+    "HR": 10,
+    "Hadoop": 7,
+    "Health and fitness": 6,
+    "Java Developer": 13,
+    "Mechanical Engineer": 5,
+    "Network Security Engineer": 5,
+    "Operations Manager": 4,
+    "PMO": 3,
+    "Python Developer": 6,
+    "SAP Developer": 6,
+    "Sales": 5,
+    "Testing": 7,
+    "Web Designing": 4
+  },
+  "holdout_accuracy": 0.47058823529411764,
+  "holdout_weighted_f1": 0.434640522875817,
+  "cv_folds": 3,
+  "cv_weighted_f1_mean": 0.38230787730787735,
+  "cv_weighted_f1_std": 0.0609277548058145,
+  "top_confusions": [
+    {
+      "actual": "Advocate",
+      "predicted": "Arts",
+      "count": 1
+    },
+    {
+      "actual": "Arts",
+      "predicted": "Advocate",
+      "count": 1
+    },
+    {
+      "actual": "Automation Testing",
+      "predicted": "Arts",
+      "count": 1
+    },
+    {
+      "actual": "Blockchain",
+      "predicted": "Civil Engineer",
+      "count": 1
+    },
+    {
+      "actual": "Business Analyst",
+      "predicted": "HR",
+      "count": 1
+    },
+    {
+      "actual": "DevOps Engineer",
+      "predicted": "HR",
+      "count": 1
+    },
+    {
+      "actual": "ETL Developer",
+      "predicted": "SAP Developer",
+      "count": 1
+    },
+    {
+      "actual": "Electrical Engineering",
+      "predicted": "HR",
+      "count": 1
+    },
+    {
+      "actual": "HR",
+      "predicted": "Testing",
+      "count": 1
+    },
+    {
+      "actual": "Health and fitness",
+      "predicted": "Arts",
+      "count": 1
+    }
+  ],
+  "classification_report": {
+    "Advocate": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1-score": 0.5,
+      "support": 2.0
+    },
+    "Arts": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Automation Testing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Blockchain": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Business Analyst": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Civil Engineer": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 1.0
+    },
+    "Data Science": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "Database": {
+      "precision": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 0.8,
+      "support": 2.0
+    },
+    "DevOps Engineer": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "DotNet Developer": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "ETL Developer": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Electrical Engineering": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "HR": {
+      "precision": 0.14285714285714285,
+      "recall": 0.5,
+      "f1-score": 0.2222222222222222,
+      "support": 2.0
+    },
+    "Hadoop": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2.0
+    },
+    "Health and fitness": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Java Developer": {
+      "precision": 1.0,
+      "recall": 0.6666666666666666,
+      "f1-score": 0.8,
+      "support": 3.0
+    },
+    "Mechanical Engineer": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Network Security Engineer": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Operations Manager": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "PMO": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Python Developer": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "SAP Developer": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 1.0
+    },
+    "Sales": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Testing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 2.0
+    },
+    "Web Designing": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "accuracy": 0.47058823529411764,
+    "macro avg": {
+      "precision": 0.3323809523809524,
+      "recall": 0.38666666666666666,
+      "f1-score": 0.3462222222222222,
+      "support": 34.0
+    },
+    "weighted avg": {
+      "precision": 0.4299719887955182,
+      "recall": 0.47058823529411764,
+      "f1-score": 0.434640522875817,
+      "support": 34.0
+    }
+  }
+}

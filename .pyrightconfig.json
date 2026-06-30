@@ -1,0 +1,10 @@
+{
+  "exclude": [
+    "**/__pyrefly_virtual__/**",
+    "**/inmemory/**",
+    "venv/**",
+    "__pycache__/**"
+  ],
+  "reportMissingModuleSource": "none",
+  "reportUndefinedVariable": "none"
+}

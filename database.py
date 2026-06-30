@@ -1,8 +1,11 @@
 # Database operations module for InternHunt
-import pymysql
-import streamlit as st
+import os
 import logging
+import streamlit as st
 from typing import Optional, Dict, Any
+import pymysql
+import psycopg2
+from urllib.parse import urlparse
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -16,16 +19,31 @@ class DatabaseManager:
         self._connect()
     
     def _connect(self):
-        """Establish database connection"""
+        """Establish database connection (Postgres via DATABASE_URL preferred)."""
         try:
-            # Only attempt connection if database credentials are provided
-            if Config.DB_CONFIG.get('password') or Config.DB_CONFIG.get('user') != 'root':
-                self.connection = pymysql.connect(**Config.DB_CONFIG)
+            db_url = getattr(Config, 'DATABASE_URL', None)
+            if db_url:
+                # Postgres (Neon) path
+                self.engine_type = 'postgres'
+                # Ensure SSL for Neon if not provided
+                needs_ssl = ('sslmode=' not in db_url)
+                conn_kwargs: dict[str, str] = {}
+                if needs_ssl:
+                    conn_kwargs['sslmode'] = 'require'
+                self.connection = psycopg2.connect(db_url, **conn_kwargs)  # type: ignore[call-overload]
                 self.cursor = self.connection.cursor()
                 self._initialize_database()
-                logger.info("Database connected successfully")
+                logger.info("Connected to Postgres (DATABASE_URL)")
+                return
+            # Fallback to MySQL if configured
+            if Config.DB_CONFIG.get('host') and Config.DB_CONFIG.get('user') and Config.DB_CONFIG.get('database'):
+                self.engine_type = 'mysql'
+                self.connection = pymysql.connect(**Config.DB_CONFIG)  # type: ignore[call-overload]
+                self.cursor = self.connection.cursor()
+                self._initialize_database()
+                logger.info("Connected to MySQL")
             else:
-                logger.info("Database credentials not configured - running without database features")
+                logger.info("Database not configured - running without persistence")
                 self.connection = None
                 self.cursor = None
         except Exception as e:
@@ -34,32 +52,48 @@ class DatabaseManager:
             self.cursor = None
     
     def _initialize_database(self):
-        """Create database and tables if they don't exist"""
+        """Create required tables in the connected database if they don't exist.
+        Note: Managed cloud providers may restrict CREATE DATABASE; we only create tables.
+        """
         try:
-            # Create database
-            self.cursor.execute("CREATE DATABASE IF NOT EXISTS cv;")
-            self.cursor.execute("USE cv;")
-            
-            # Create user_data table
-            create_table_sql = """
-            CREATE TABLE IF NOT EXISTS user_data (
-                ID INT NOT NULL AUTO_INCREMENT,
-                Name VARCHAR(500) NOT NULL,
-                Email_ID VARCHAR(500) NOT NULL,
-                resume_score VARCHAR(8) NOT NULL,
-                Timestamp VARCHAR(50) NOT NULL,
-                Page_no VARCHAR(5) NOT NULL,
-                Predicted_Field TEXT NOT NULL,
-                User_level TEXT NOT NULL,
-                Actual_skills TEXT NOT NULL,
-                Recommended_skills TEXT NOT NULL,
-                Recommended_courses TEXT NOT NULL,
-                PRIMARY KEY (ID)
-            );
-            """
+            if getattr(self, 'engine_type', 'mysql') == 'postgres':
+                create_table_sql = """
+                CREATE TABLE IF NOT EXISTS user_data (
+                    ID SERIAL PRIMARY KEY,
+                    Name VARCHAR(500) NOT NULL,
+                    Email_ID VARCHAR(500) NOT NULL,
+                    resume_score VARCHAR(8) NOT NULL,
+                    Timestamp VARCHAR(50) NOT NULL,
+                    Page_no VARCHAR(5) NOT NULL,
+                    Predicted_Field TEXT NOT NULL,
+                    User_level TEXT NOT NULL,
+                    Actual_skills TEXT NOT NULL,
+                    Recommended_skills TEXT NOT NULL,
+                    Recommended_courses TEXT NOT NULL
+                );
+                """
+            else:
+                create_table_sql = """
+                CREATE TABLE IF NOT EXISTS user_data (
+                    ID INT NOT NULL AUTO_INCREMENT,
+                    Name VARCHAR(500) NOT NULL,
+                    Email_ID VARCHAR(500) NOT NULL,
+                    resume_score VARCHAR(8) NOT NULL,
+                    Timestamp VARCHAR(50) NOT NULL,
+                    Page_no VARCHAR(5) NOT NULL,
+                    Predicted_Field TEXT NOT NULL,
+                    User_level TEXT NOT NULL,
+                    Actual_skills TEXT NOT NULL,
+                    Recommended_skills TEXT NOT NULL,
+                    Recommended_courses TEXT NOT NULL,
+                    PRIMARY KEY (ID)
+                );
+                """
+            if self.cursor is None or self.connection is None:
+                return
             self.cursor.execute(create_table_sql)
             self.connection.commit()
-        except pymysql.MySQLError as e:
+        except Exception as e:
             logger.error(f"Database initialization failed: {e}")
     
     def insert_user_data(self, name: str, email: str, res_score: int, 
@@ -92,6 +126,8 @@ class DatabaseManager:
                 ', '.join(courses)
             )
             
+            if self.cursor is None or self.connection is None:
+                return False
             self.cursor.execute(insert_sql, values)
             self.connection.commit()
             logger.info("User data inserted successfully")
@@ -106,9 +142,11 @@ class DatabaseManager:
             return None
         
         try:
+            if self.cursor is None:
+                return None
             self.cursor.execute(f"SELECT * FROM user_data ORDER BY ID DESC LIMIT {limit}")
             return self.cursor.fetchall()
-        except pymysql.MySQLError as e:
+        except Exception as e:
             logger.error(f"Database query failed: {e}")
             return None
     

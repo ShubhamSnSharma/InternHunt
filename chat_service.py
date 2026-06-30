@@ -1,316 +1,103 @@
 """
-Enhanced local chatbot service using Ollama with improved features.
+Gemini AI Chatbot Service for Career Coaching
 
 Features:
-- Streaming responses for better UX
-- Model management and health checks
+- Powered by Google's Gemini AI
+- Cloud-based AI responses
 - Enhanced error handling
 - Conversation context management
 - Resume-aware responses
+- Streaming support
 
-Env vars (optional):
-- OLLAMA_HOST (default: http://localhost:11434)
-- OLLAMA_MODEL (default: phi:latest)
+Environment Variables (required):
+- GEMINI_API_KEY: Your Google Gemini API key
+- GEMINI_MODEL: Model to use (default: gemini-1.5-flash)
 """
 from __future__ import annotations
 
 import os
 import re
-import requests
 import json
 import time
 from typing import List, Dict, Any, Optional, Tuple, Generator
 from dotenv import load_dotenv
 import random
+import google.generativeai as genai
 
-def _get_ollama_config() -> Tuple[str, str]:
-    """Read Ollama host/model from env each call and sanitize host."""
-    # Load .env each time so changes in UI take effect on rerun
-    load_dotenv(override=False)
-    host = os.getenv("OLLAMA_HOST", "http://localhost:11434").strip()
-    model = os.getenv("OLLAMA_MODEL", "phi:latest").strip()
-    # Remove any trailing slash and accidental '/api' suffix
-    if host.endswith("/api"):
-        host = host[:-4]
-    host = host.rstrip("/")
-    return host, model
+def _get_gemini_config() -> Tuple[str, str]:
+    """Read Gemini API key and model from env variables or Streamlit secrets."""
+    try:
+        # Load .env each time so changes in UI take effect on rerun
+        load_dotenv(override=True)
+        # Prefer environment, then Streamlit secrets (for Streamlit Cloud)
+        try:
+            import streamlit as st  # type: ignore
+            st_secrets = getattr(st, 'secrets', None)
+        except Exception:
+            st_secrets = None
+        api_key = (os.getenv("GEMINI_API_KEY") or
+                   (st_secrets.get('GEMINI_API_KEY') if st_secrets else None) or
+                   "").strip()
+        model = (os.getenv("GEMINI_MODEL") or
+                 (st_secrets.get('GEMINI_MODEL') if st_secrets else None) or
+                 "gemini-1.5-flash").strip()
 
-# Updated system prompt with stronger, more directive instructions
+        if not api_key or api_key == "your_gemini_api_key_here":
+            raise ValueError("Gemini API key not found in environment variables or Streamlit secrets")
+
+        return api_key, model
+
+    except Exception as e:
+        print(f"Error in _get_gemini_config: {str(e)}")
+        raise
+
+# Enhanced system prompt with resume context integration
 SYSTEM_PROMPT_BASE = """
-You're a friendly career coach named CareerGPT, here to help users navigate their career journey. Your goal is to provide warm, personalized advice that feels like talking to a trusted mentor.
+You are a friendly career mentor helping someone with their job search. Be conversational, warm, and practical.
 
-## Your Personality & Tone:
-- Warm and approachable, like a helpful career advisor
-- Professional but conversational - no corporate jargon
-- Empathetic and encouraging
-- Clear and concise in your explanations
-- Proactive in offering helpful suggestions
+## Resume Context
+{resume_context}
 
-## When Responding:
-1. Start with a friendly acknowledgment of their question
-2. Reference specific details from their resume naturally
-3. Break down complex advice into simple, actionable steps
-4. Use "you/your" to make it personal
-5. End with an encouraging note or next step
+## Communication Style
+- Write naturally like you're texting a friend who asked for career advice
+- NO asterisks, NO bold markers (***), NO excessive formatting
+- Use simple bullet points with dashes (-) or emojis when listing things
+- Keep responses under 150 words unless asked for detail
+- Be encouraging but honest
+- Use "you/your" to make it personal
 
-## Response Format (be natural, not rigid):
+## Response Structure
+1. Start with a friendly acknowledgment ("Great question!" / "I see where you're coming from")
+2. Give 2-3 specific recommendations based on their skills
+3. End with ONE actionable next step
 
-� [Brief, friendly acknowledgment of their question]
+## Example Good Response:
+"Great question! Based on your background in embedded systems and VLSI, here are my top recommendations:
 
-🔍 **What I Notice**
-• Specific, relevant observations from their resume
-• Connections to their career goals
-• Strengths that stand out
+- Focus on RTOS like FreeRTOS - it's huge in embedded roles
+- Learn Git if you haven't already - version control is essential
+- Pick up basic data structures and algorithms
 
-🎯 **My Recommendations**
-• Practical, tailored suggestions
-• Specific skills or areas to focus on
-• Job titles or paths that could be a great fit
-
-� **Your Action Plan**
-1. Clear first step they can take now
-2. Short-term goals (next few weeks)
-3. Longer-term considerations
-
-💡 **Quick Tip**
-• A helpful resource, tool, or strategy
-• A networking idea
-• A portfolio project suggestion
-
-## Example Interaction:
-User: "What jobs should I apply for?"
-
-� That's a great question! Based on your background, here are some roles that could be a fantastic fit:
-
-🔍 **What I Notice**
-• You have 2+ years of experience with Python and web development
-• Your work at [Company] shows strong problem-solving skills
-• You've successfully led [specific project] which demonstrates leadership
-
-🎯 **My Recommendations**
-• Python Developer roles at mid-sized tech companies
-• Full-stack positions where you can leverage both frontend and backend skills
-• Consider startups for faster growth opportunities
-
-� **Your Action Plan**
-1. Update your LinkedIn with keywords from job descriptions
-2. Set up job alerts for "Python Developer" on LinkedIn and Indeed
-3. Research 3-5 companies you'd love to work for
-
-💡 **Quick Tip**
-Check out [specific resource] to brush up on system design - it often comes up in interviews!
-
-## Remember:
-- Keep it conversational, like you're talking to a friend
-- Be specific with your advice
-- Highlight their strengths
-- Make it easy to take the next step
+Start with an online RTOS tutorial this week. It'll make you way more competitive for firmware roles. Let me know if you need course recommendations! 🚀"
 """
-
-def _format_messages(user_messages: List[Dict[str, str]], system: Optional[str]) -> Dict[str, Any]:
-    """Format messages for Ollama API with improved context handling"""
-    prompt_parts = []
-    
-    # Add system prompt first
-    if system:
-        prompt_parts.append(f"System: {system}")
-    
-    # Format conversation history (last 6 messages for better context)
-    for m in user_messages[-6:]:
-        role = m.get("role", "user")
-        content = m.get("content", "").strip()
-        
-        if role == "assistant":
-            prompt_parts.append(f"Assistant: {content}")
-        else:
-            # Add user's message with context
-            prompt_parts.append(f"User: {content}")
-    
-    # Add instruction to be specific and actionable
-    prompt_parts.append("\nAssistant:")
-    
-    prompt = "\n\n".join(p for p in prompt_parts if p)
-    
-    return {
-        "model": _get_ollama_config()[1],
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "temperature": 0.3,  # Lower for more focused responses
-            "top_p": 0.9,
-            "num_predict": 1000,  # Increased for more detailed responses
-            "repeat_penalty": 1.2,  # Higher to reduce repetition
-            "top_k": 50,
-            "stop": ["\n\n\n", "User:", "Assistant:"]
-        },
-    }
-
-def _format_structured_response(text: str) -> str:
-    """Improved response formatter with better section detection"""
-    try:
-        # Clean up the text first
-        text = text.strip()
-        
-        # Common section headers with emojis
-        sections = [
-            (r'(?i)(analysis|overview|summary)', '🔍'),
-            (r'(?i)(recommendation|suggestion|advice)', '🎯'),
-            (r'(?i)(next steps?|action items?)', '📈'),
-            (r'(?i)(tip|pro tip|suggestion)', '💡'),
-            (r'(?i)(example|sample)', '📋'),
-            (r'(?i)(note|important|warning)', 'ℹ️'),
-            (r'(?i)(resource|reference)', '📚'),
-            (r'(?i)(question|clarification)', '❓')
-        ]
-        
-        # Convert markdown headers to our format if needed
-        for pattern, emoji in sections:
-            text = re.sub(
-                r'#{1,3}\s*' + pattern + r'[\s:]*\n',
-                f'\n{emoji} **' + r'\1'.title() + '**\n\n',
-                text,
-                flags=re.IGNORECASE
-            )
-        
-        # Ensure consistent bullet points
-        text = re.sub(r'(?<=\n)([-•*]|\d+[.)])\s+', '• ', text)
-        
-        # Clean up spacing
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        text = re.sub(r'[ \t]+', ' ', text)
-        
-        # Ensure proper spacing after headers
-        text = re.sub(r'(\n[🔍🎯📈💡📋ℹ️❓📚]\s+\*\*[^\n]+\*\*)(\S)', r'\1\n\2', text)
-        
-        return text.strip()
-    except Exception as e:
-        return f"Error formatting response: {str(e)}\n\n{text}"
-
-def check_ollama_health() -> Dict[str, Any]:
-    """Check if Ollama is running and get model info"""
-    try:
-        host, model = _get_ollama_config()
-        response = requests.get(f"{host}/api/tags", timeout=5)
-        response.raise_for_status()
-        models = response.json().get("models", [])
-        
-        model_exists = any(m.get("name", "").startswith(model) for m in models)
-        
-        return {
-            "status": "healthy",
-            "host": host,
-            "model": model,
-            "model_exists": model_exists,
-            "available_models": [m.get("name", "") for m in models]
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "host": _get_ollama_config()[0],
-            "model": _get_ollama_config()[1]
-        }
-
-def _format_messages_streaming(user_messages: List[Dict[str, str]], system: Optional[str]) -> Dict[str, Any]:
-    """Format messages for streaming Ollama API with friendly conversation style"""
-    prompt_parts = []
-    if system:
-        prompt_parts.append(f"System: {system}")
-    
-    # Format conversation history
-    for m in user_messages[-4:]:  # Keep last 4 messages for context
-        role = m.get("role", "user")
-        content = m.get("content", "")
-        if role == "assistant":
-            prompt_parts.append(f"Me: {content}")
-        else:
-            prompt_parts.append(f"You: {content}")
-    
-    prompt = "\n\n".join(prompt_parts)
-    return {
-        "model": _get_ollama_config()[1],
-        "prompt": prompt,
-        "stream": True,
-        "options": {
-            "temperature": 0.3,
-            "top_p": 0.9,
-            "num_predict": 800,  # Increased from 300 to match non-streaming
-            "repeat_penalty": 1.15,  # Slightly higher to reduce repetition
-            "top_k": 40,  # Slightly more focused
-            "stop": ["\n\n\n"]  # Stop on triple newline
-        },
-    }
-
-def chat_ollama(messages: List[Dict[str, str]], resume_context: Optional[str] = None, system_prompt: Optional[str] = None) -> str:
-    """Send a chat to Ollama with a friendly, conversational tone"""
-    # Start with the base system prompt
-    sys = system_prompt or SYSTEM_PROMPT_BASE
-    
-    # Format the system prompt with resume context if available
-    if resume_context:
-        # Keep it concise but informative
-        truncated_context = resume_context[:2000]
-        sys = sys.format(
-            resume_context=f"\n=== RESUME DETAILS ===\n{truncated_context}\n=== END RESUME ===\n"
-        )
-    else:
-        sys = sys.format(
-            resume_context="No resume details available. Please ask the user to upload their resume for personalized advice."
-        )
-    
-    # Add conversation history with a friendly tone
-    conversation = [
-        {
-            "role": "system",
-            "content": sys
-        },
-        *messages[-5:],  # Keep last 5 messages for context
-    ]
-    
-    # Prepare the payload with settings for natural responses
-    payload = {
-        "model": _get_ollama_config()[1],
-        "messages": conversation,
-        "options": {
-            "temperature": 0.7,  # Slightly higher for more natural responses
-            "top_p": 0.9,
-            "num_predict": 800,
-            "repeat_penalty": 1.1,  # Lower to allow some repetition for natural flow
-            "top_k": 40,
-        },
-    }
-    
-    try:
-        host, model = _get_ollama_config()
-        if not host or not model:
-            return "I'm having trouble connecting to the AI service. Please check your settings and try again."
-        
-        # Add a small delay to make it feel more natural
-        time.sleep(0.5)
-        
-        response = requests.post(
-            f"{host}/api/chat",
-            json=payload,
-            timeout=30
-        )
-        response.raise_for_status()
-        
-        result = response.json()
-        response_text = result.get('message', {}).get('content', '').strip()
-        
-        # Format the response to be more conversational
-        return _format_conversational_response(response_text)
-        
-    except requests.exceptions.RequestException as e:
-        return "I'm having trouble connecting right now. Could you try again in a moment?"
-    except Exception as e:
-        return "Hmm, something went wrong. Could you rephrase your question?"
 
 def _format_conversational_response(text: str) -> str:
     """Format the response to be more conversational and friendly"""
     try:
         # Clean up any excessive newlines
         text = re.sub(r'\n{3,}', '\n\n', text.strip())
+        
+        # Replace formal phrases with more conversational ones
+        replacements = {
+            "I would like to": "I'd like to",
+            "it is important": "it's important",
+            "do not": "don't",
+            "cannot": "can't",
+            "I will": "I'll"
+        }
+        
+        for formal, informal in replacements.items():
+            text = text.replace(formal, informal)
         
         # Ensure proper spacing after section headers
         text = re.sub(
@@ -320,139 +107,558 @@ def _format_conversational_response(text: str) -> str:
         )
         
         # Add a friendly sign-off if none exists
-        if not any(phrase in text.lower() for phrase in ['good luck', 'best of luck', 'hope this helps']):
+        if not any(phrase in text.lower() for phrase in ['good luck', 'best of luck', 'hope this helps', 'let me know', 'feel free']):
             sign_offs = [
                 "\n\nHope this helps! Let me know if you have any other questions. 😊",
                 "\n\nFeel free to ask if you need any clarification! 👍",
                 "\n\nLet me know how else I can assist you! 🚀"
             ]
             text += random.choice(sign_offs)
+        
+        # Add occasional emojis for friendliness
+        emoji_map = [
+            (r'\b(great|excellent|awesome|perfect)\b', '😊'),
+            (r'\b(help|assist|support|guide)\b', '🤝'),
+            (r'\b(thank|thanks|appreciate)\b', '🙏'),
+            (r'\b(idea|suggestion|recommendation)\b', '💡')
+        ]
+        
+        for pattern, emoji in emoji_map:
+            if re.search(pattern, text, re.IGNORECASE):
+                text = re.sub(pattern, f"\\1 {emoji}", text, flags=re.IGNORECASE)
             
         return text.strip()
-    except:
+    except Exception as e:
+        print(f"Error formatting response: {e}")
         return text  # Return original if formatting fails
 
-def chat_ollama_streaming(messages: List[Dict[str, str]], resume_context: Optional[str] = None, system_prompt: Optional[str] = None) -> Generator[str, None, None]:
-    """Send a streaming chat to Ollama and yield response chunks.
-    messages: list of {role: 'user'|'assistant', content: str}
-    resume_context: optional text to inject into system prompt
-    """
-    sys = system_prompt or SYSTEM_PROMPT_BASE
-    if resume_context:
-        sys = sys.format(resume_context=f"\n=== RESUME DETAILS ===\n{resume_context[:2500]}\n=== END RESUME ===\n")
-    payload = _format_messages_streaming(messages, sys)
-    
+def check_gemini_health() -> Dict[str, Any]:
+    """Check if Gemini API is accessible and configured properly"""
     try:
-        host, _ = _get_ollama_config()
-        resp = requests.post(f"{host}/api/generate", json=payload, stream=True, timeout=60)
-        resp.raise_for_status()
+        api_key, model = _get_gemini_config()
         
-        for line in resp.iter_lines():
-            if line:
-                try:
-                    data = json.loads(line.decode('utf-8'))
-                    if 'response' in data:
-                        yield data['response']
-                    if data.get('done', False):
-                        break
-                except json.JSONDecodeError:
-                    continue
+        if not api_key or api_key == "your_gemini_api_key_here":
+            return {
+                "status": "error",
+                "error": "Gemini API key not configured. Please set GEMINI_API_KEY in your environment variables.",
+                "model": model
+            }
+        
+        # Configure the API key
+        genai.configure(api_key=api_key)
+        
+        # Test the connection with a simple request
+        model_instance = genai.GenerativeModel(model)
+        response = model_instance.generate_content("Hello, this is a test.")
+        
+        return {
+            "status": "healthy",
+            "model": model,
+            "api_key_configured": True,
+            "test_response": "Connection successful"
+        }
     except Exception as e:
-        host, model = _get_ollama_config()
-        hint = ""
-        if host.endswith("/api"):
-            hint = " Hint: OLLAMA_HOST should be like 'http://localhost:11434' (no /api)."
-        yield f"[Chat error: {e}. Using host={host}, model={model}.{hint}]"
+        return {
+            "status": "error",
+            "error": str(e),
+            "model": _get_gemini_config()[1]
+        }
+
+def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = None, system_prompt: Optional[str] = None) -> str:
+    """
+    Send a chat to Gemini and return a personalized response using resume context.
+    
+    Args:
+        messages: List of message dictionaries with 'role' and 'content' keys
+        resume_context: Context from the user's resume (skills, experience, etc.)
+        system_prompt: Optional custom system prompt
+        
+    Returns:
+        str: The generated response with personalized career advice
+    """
+    try:
+        # Get API configuration
+        api_key, model_name = _get_gemini_config()
+        
+        if not api_key or api_key == "your_gemini_api_key_here":
+            return "I need a Gemini API key to work. Please configure GEMINI_API_KEY in your environment variables."
+        
+        # Configure Gemini
+        genai.configure(api_key=api_key)
+        
+        # Prepare the conversation for Gemini
+        model = genai.GenerativeModel(model_name)
+        
+        # Prepare system prompt with resume context
+        sys_prompt = system_prompt or SYSTEM_PROMPT_BASE
+        
+        # Format resume context if available
+        formatted_context = "No resume information available. Ask the user to upload their resume for personalized advice."
+        if resume_context and len(resume_context) > 10:  # Basic check for meaningful content
+            # Truncate context if it's excessively long (approx 12k chars ~ 3k tokens)
+            # Gemini 1.5 Flash has huge context, but we keep it reasonable for latency
+            if len(resume_context) > 12000:
+                formatted_context = resume_context[:12000] + "\n...[truncated]"
+            else:
+                formatted_context = resume_context
+        
+        # Inject resume context into the system prompt
+        sys_prompt = sys_prompt.format(resume_context=formatted_context)
+        
+        # Build conversation history
+        # Gemini 1.5 Flash has a large context window, so we can include more history
+        history = []
+        # Include last 10 messages (5 turns)
+        for msg in messages[-10:]:
+            role = msg.get("role", "user")
+            content = (msg.get("content", "") or "").strip()
+            if not content:
+                continue
+            prefix = "User" if role == "user" else "Assistant"
+            history.append(f"{prefix}: {content}")
+        history_text = "\n".join(history) if history else "User: Hello"
+        
+        # Single API call per question
+        prompt = (
+            f"{sys_prompt}\n\n"
+            f"Candidate Profile Context (use this to personalize your answer):\n{formatted_context}\n\n"
+            f"Conversation History:\n{history_text}\n\n"
+            f"IMPORTANT: Answer the user's LATEST question from the history above. Do not just summarize the resume unless asked.\n"
+            f"Assistant:"
+        )
+        
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7,
+                top_p=0.9,
+                top_k=40,
+                max_output_tokens=4096,  # Significantly increased from 1024
+            ),
+            safety_settings=[
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+                },
+            ]
+        )
+        
+        # Check if response was blocked by safety filters
+        if response.prompt_feedback and hasattr(response.prompt_feedback, 'block_reason'):
+            return "⚠️ I couldn't process that request due to content safety filters. Please try rephrasing your question in a different way."
+        
+        # Check finish reason
+        if hasattr(response, 'candidates') and response.candidates:
+            candidate = response.candidates[0]
+            if hasattr(candidate, 'finish_reason'):
+                # finish_reason: 1=STOP (normal), 2=MAX_TOKENS, 3=SAFETY, 4=RECITATION, 5=OTHER
+                if candidate.finish_reason == 3:  # SAFETY
+                    return "⚠️ The response was blocked by safety filters. Please rephrase your question."
+                elif candidate.finish_reason == 2:  # MAX_TOKENS
+                    # Instead of erroring, return what we have so far
+                    partial_text = ""
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                         text_parts = [part.text for part in candidate.content.parts if hasattr(part, 'text')]
+                         partial_text = ''.join(text_parts)
+                    return _format_conversational_response(partial_text + "\n\n[Response truncated due to length]")
+                elif candidate.finish_reason not in [1, 0]:  # Not STOP or UNSPECIFIED
+                    return "⚠️ I encountered an issue generating the response. Please try again with a different question."
+        
+        # Format the response
+        if response and hasattr(response, 'text'):
+            try:
+                return _format_conversational_response(response.text)
+            except ValueError as e:
+                # response.text failed - try accessing parts directly
+                if hasattr(response, 'candidates') and response.candidates:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                        text_parts = [part.text for part in candidate.content.parts if hasattr(part, 'text')]
+                        if text_parts:
+                            return _format_conversational_response(''.join(text_parts))
+                return "⚠️ I couldn't generate a proper response. Please try rephrasing your question."
+        else:
+            return "I'm having trouble generating a response right now. Could you try rephrasing your question?"
+            
+    except Exception as e:
+        error_msg = str(e).lower()
+        print(f"Gemini API Error: {str(e)}")  # Debug log
+        
+        # More detailed error handling
+        if "api_key" in error_msg or "API key" in str(e):
+            return "🔑 There's an issue with the API key configuration. Please check your Gemini API key in the .env file and ensure it's valid."
+            
+        if "quota" in error_msg or "limit" in error_msg:
+            return "⚠️ I've reached my usage limit for now. Please try again later or check your API quota at https://ai.google.dev/"
+            
+        if "unavailable" in error_msg or "500" in str(e):
+            return "🔌 The AI service is temporarily unavailable. Please try again in a few moments."
+            
+        if "timeout" in error_msg or "timed out" in error_msg:
+            return "⏱️ The request timed out. Please check your internet connection and try again."
+            
+        # For other errors, provide more context
+        print(f"Full error details: {str(e)}")
+        return f"❌ I encountered an error: {str(e)[:200]}... Please try again or rephrase your question."
+
+def chat_gemini_streaming(messages: List[Dict[str, str]], resume_context: Optional[str] = None, system_prompt: Optional[str] = None) -> Generator[str, None, None]:
+    """Send a streaming chat to Gemini and yield response chunks.
+    
+    This simulates streaming by breaking the complete response into chunks
+    since Gemini's streaming API is different from traditional chat streaming.
+    """
+    try:
+        # Get the complete response first
+        full_response = chat_gemini(messages, resume_context, system_prompt)
+        
+        # Simulate streaming by yielding chunks
+        chunk_size = 5  # Smaller chunks for more natural streaming
+        for i in range(0, len(full_response), chunk_size):
+            chunk = full_response[i:i+chunk_size]
+            if chunk.strip():  # Skip empty chunks
+                yield chunk
+                time.sleep(0.02)  # Small delay for realistic streaming
+            
+    except Exception as e:
+        error_msg = str(e)
+        if "API_KEY" in error_msg.upper():
+            yield "Error: There's an issue with the API key configuration."
+        elif "QUOTA" in error_msg.upper() or "LIMIT" in error_msg.upper():
+            yield "Error: API quota exceeded. Please try again later."
+        else:
+            yield f"Error: {error_msg[:200]}"  # Truncate long error messages
+        yield f"[Chat error: {e}]"
 
 def get_suggested_questions(resume_data: Dict[str, Any]) -> List[str]:
     """Generate more relevant suggested questions based on resume content"""
     if not resume_data:
         return [
-            "What skills should I add to my resume?",
-            "How can I improve my resume's impact?",
-            "What are some good projects for my experience level?",
-            "How can I highlight my achievements better?"
+            "What skills should I focus on for my career?",
+            "How can I improve my resume?",
+            "What jobs should I apply for?",
+            "Tell me about current industry trends",
+            "How do I prepare for technical interviews?"
         ]
     
+    base_questions = []
+    
+    # Get basic info
+    name = resume_data.get('name', 'candidate')
     skills = resume_data.get('skills', [])
-    experience = resume_data.get('experience', [])
+    experience = resume_data.get('total_experience', 0)
     
-    questions = []
-    
-    # Add skill-specific questions
-    if skills:
-        skills_str = ', '.join(skills[:3])
-        questions.extend([
-            f"How can I highlight my {skills_str} experience better?",
-            f"What are some advanced topics in {skills[0]} I should learn next?",
-            f"How can I combine {skills_str} to build a portfolio project?"
+    # Experience-based questions
+    if experience == 0:
+        base_questions.extend([
+            "What entry-level positions should I target?",
+            "How can I gain experience as a fresh graduate?",
+            "What projects should I build to stand out?"
+        ])
+    elif experience < 2:
+        base_questions.extend([
+            "How can I transition to a senior role?",
+            "What skills gap should I address?",
+            "Should I consider switching companies?"
+        ])
+    else:
+        base_questions.extend([
+            "How can I move into leadership roles?",
+            "What's the best career progression path?",
+            "Should I consider specializing or staying generalist?"
         ])
     
-    # Add experience-based questions
-    if experience:
-        latest_role = experience[0].get('title', 'your role') if experience else 'your experience'
-        questions.extend([
-            f"How can I better showcase my achievements as a {latest_role}?",
-            "What metrics should I include to quantify my impact?",
-            "How can I tailor my resume for senior roles?"
-        ])
+    # Skill-based questions
+    if 'python' in [s.lower() for s in skills]:
+        base_questions.append("What Python frameworks should I learn next?")
+    if 'javascript' in [s.lower() for s in skills]:
+        base_questions.append("Should I focus on frontend or backend JavaScript?")
+    if 'data' in ' '.join(skills).lower():
+        base_questions.append("What data science certifications are worth pursuing?")
     
-    # Add general career questions
-    questions.extend([
-        "What are the top skills in demand for my target roles?",
-        "How can I improve my resume's ATS compatibility?",
-        "What are some good open-source projects to contribute to?"
+    # Generic helpful questions
+    base_questions.extend([
+        "How competitive is my profile in the current market?",
+        "What's missing from my skill set?",
+        "How should I negotiate my next salary?",
+        "What are the latest trends in my field?"
     ])
     
-    return questions[:5]  # Return top 5 questions
+    # Return a random selection of 6-8 questions
+    return random.sample(base_questions, min(6, len(base_questions)))
 
 def build_resume_context(resume_data: Dict[str, Any]) -> str:
-    parts = []
-    name = resume_data.get("name")
-    email = resume_data.get("email")
-    phone = resume_data.get("mobile_number")
-    skills_list = resume_data.get("skills", [])
-    tech_skills, other_skills = _categorize_skills(skills_list)
-    parts.append(f"Name: {name or 'N/A'}")
-    parts.append(f"Email: {email or 'N/A'} | Phone: {phone or 'N/A'}")
-    parts.append("Skills (all): " + (", ".join(skills_list[:50]) if skills_list else "N/A"))
-    if tech_skills:
-        parts.append("Technical Skills: " + ", ".join(sorted(set(tech_skills))[:50]))
-    if other_skills:
-        parts.append("Other Skills: " + ", ".join(sorted(set(other_skills))[:50]))
-    raw = resume_data.get("raw_text", "")
-    if raw:
-        parts.append("Summary:\n" + raw[:1200])
-    return "\n".join(parts)
+    """Build a comprehensive context from resume data for the AI"""
+    if not resume_data:
+        return "No resume data available."
+    
+    context_parts = []
+    
+    # Basic information
+    if resume_data.get('name'):
+        context_parts.append(f"Candidate: {resume_data['name']}")
+    
+    if resume_data.get('email'):
+        context_parts.append(f"Email: {resume_data['email']}")
+    
+    # Experience summary
+    total_exp = resume_data.get('total_experience', 0)
+    if total_exp > 0:
+        context_parts.append(f"Total Experience: {total_exp} years")
+    else:
+        context_parts.append("Experience: Fresh graduate/Entry level")
+    
+    # Skills
+    skills = resume_data.get('skills', [])
+    if skills:
+        # Use ALL unique skills; sorted for consistency
+        uniq_skills = sorted(list(dict.fromkeys([s.strip() for s in skills if s and isinstance(s, str)])), key=lambda x: x.lower())
+        context_parts.append(f"Skills ({len(uniq_skills)}): {', '.join(uniq_skills)}")
+    
+    # Education
+    education = resume_data.get('education', [])
+    if education:
+        edu_info = []
+        for edu in education[:2]:  # Top 2 education entries
+            if edu.get('degree') and edu.get('institution'):
+                edu_info.append(f"{edu['degree']} from {edu['institution']}")
+        if edu_info:
+            context_parts.append(f"Education: {'; '.join(edu_info)}")
+    
+    # Work Experience
+    experience = resume_data.get('work_experience', [])
+    if experience:
+        exp_info = []
+        for exp in experience[:3]:  # Top 3 work experiences
+            if exp.get('position') and exp.get('company'):
+                duration = exp.get('duration', 'Duration not specified')
+                exp_info.append(f"{exp['position']} at {exp['company']} ({duration})")
+        if exp_info:
+            context_parts.append(f"Work Experience: {'; '.join(exp_info)}")
+    
+    # Projects
+    projects = resume_data.get('projects', [])
+    if projects:
+        proj_info = []
+        for proj in projects[:2]:  # Top 2 projects
+            if proj.get('name'):
+                proj_info.append(proj['name'])
+        if proj_info:
+            context_parts.append(f"Key Projects: {', '.join(proj_info)}")
+    
+    return '\\n'.join(context_parts)
 
-TECH_KEYWORDS = {
-    # Core languages & frameworks
-    "python","java","javascript","typescript","c","c++","c#","go","rust","php","ruby","kotlin","swift",
-    "html","css","react","angular","vue","django","flask","spring","node","express","next","nestjs","fastapi",
-    # Data, AI, tools
-    "sql","mysql","postgres","mongodb","redis","elasticsearch","pandas","numpy","scikit","sklearn","pytorch","tensorflow","keras",
-    "nlp","computer vision","opencv","langchain","huggingface","spark","hadoop","airflow","tableau","power bi","excel",
-    # DevOps & cloud
-    "docker","kubernetes","k8s","terraform","ansible","aws","azure","gcp","linux","git","github","gitlab","ci/cd",
-    # Web, mobile, testing
-    "rest","graphql","grpc","android","ios","xcode","android studio","jest","pytest","selenium"
-}
+def parse_resume_via_gemini(pdf_bytes: bytes) -> str:
+    """Use Gemini multimodal capability to perform OCR/text extraction on a PDF"""
+    try:
+        api_key, model_name = _get_gemini_config()
+        if not api_key:
+            return ""
+        
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        
+        # Both gemini-1.5-flash and gemini-2.5-flash are multimodal and support PDF
+        model = genai.GenerativeModel(model_name)
+        
+        prompt = (
+            "You are an expert resume parser OCR tool. Extract all textual content, sections, titles, dates, "
+            "and candidate details from this document exactly as they appear. Do not summarize. Do not add metadata. "
+            "Just return the raw text extracted from the document."
+        )
+        
+        response = model.generate_content([
+            {
+                "mime_type": "application/pdf",
+                "data": pdf_bytes
+            },
+            prompt
+        ])
+        
+        if response and hasattr(response, 'text') and response.text:
+            return response.text.strip()
+        return ""
+    except Exception as e:
+        print(f"Error in parse_resume_via_gemini: {e}")
+        return ""
 
-def _categorize_skills(skills_list: Any) -> Tuple[list, list]:
-    tech, other = [], []
-    if not isinstance(skills_list, list):
-        return tech, other
-    for s in skills_list[:100]:
-        if not isinstance(s, str):
-            continue
-        sl = s.strip()
-        key = sl.lower()
-        if key in TECH_KEYWORDS:
-            tech.append(sl)
-        else:
-            # heuristic: if it contains known tech separators/terms
-            if any(t in key for t in ["devops","engineer","framework","library","database","cloud","ml","ai","data "]):
-                tech.append(sl)
-            else:
-                other.append(sl)
-    return tech, other
+def generate_personalized_suggestions(resume_data: Dict[str, Any]) -> List[str]:
+    """Use Gemini to generate 3-5 highly personalized suggestions for the resume"""
+    try:
+        api_key, model_name = _get_gemini_config()
+        if not api_key:
+            return []
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+        
+        context = build_resume_context(resume_data)
+        
+        prompt = (
+            "You are an elite recruiter and resume optimization expert.\n"
+            f"Analyze the following candidate's resume context:\n{context}\n\n"
+            "Generate 3 to 4 highly specific, realistic, and non-generic suggestions to improve their resume.\n"
+            "Requirements:\n"
+            "- Do NOT use generic advice like 'Add work experience' or 'Include contact info' or 'Add phone number'.\n"
+            "- Make advice specific to their target domain and skills (e.g. if they know Python, suggest exact libraries/frameworks to add, or specific projects to build).\n"
+            "- Tell them exactly WHAT to add or change (e.g. 'Integrate a database like PostgreSQL in your Python project to show full-stack capabilities').\n"
+            "- Keep each suggestion concise (under 20 words).\n"
+            "- Return response ONLY as a JSON list of strings, for example: [\"Suggestion 1\", \"Suggestion 2\", \"Suggestion 3\"]\n"
+            "Return nothing but the JSON array."
+        )
+        
+        try:
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.4,
+                    max_output_tokens=512,
+                    response_mime_type="application/json",
+                    response_schema={
+                        "type": "ARRAY",
+                        "items": {"type": "STRING"}
+                    }
+                )
+            )
+        except Exception:
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.4,
+                    max_output_tokens=512,
+                )
+            )
+        
+        if response and hasattr(response, 'text') and response.text:
+            cleaned = response.text.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("```")[1]
+                if cleaned.startswith("json"):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3].strip()
+            
+            try:
+                suggs = json.loads(cleaned)
+            except Exception:
+                # Regex fallback to extract quoted strings if json is malformed
+                suggs = re.findall(r'"([^"\\]*(?:\\.[^"\\]*)*)"', cleaned)
+                if not suggs:
+                    suggs = re.findall(r"'([^'\\]*(?:\\.[^'\\]*)*)'", cleaned)
+            
+            if isinstance(suggs, list) and suggs:
+                return [str(s).strip() for s in suggs if str(s).strip()]
+    except Exception as e:
+        print(f"Error in generate_personalized_suggestions: {e}")
+    return []
+
+def generate_personalized_templates(resume_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Use Gemini to generate custom, tailored ATS bullet points / templates for the candidate's skills"""
+    try:
+        api_key, model_name = _get_gemini_config()
+        if not api_key:
+            return []
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+        
+        context = build_resume_context(resume_data)
+        
+        prompt = (
+            "You are an expert resume writer.\n"
+            f"Analyze the following candidate's resume context:\n{context}\n\n"
+            "Generate 2 distinct tailored templates/examples that they can add to their resume.\n"
+            "One should be a 'Work Experience' or 'Project' bullet point block in STAR format.\n"
+            "The other should be a tailored 'Professional Summary' block.\n"
+            "Requirements:\n"
+            "- Tailor it exactly to their specific skills and domain (e.g. use their actual tools/skills like Python, SQL, C++, React, etc.).\n"
+            "- Make it sound extremely professional, realistic, and ready-to-use (with placeholder brackets like <metric> or <duration> for them to customize).\n"
+            "- Return response ONLY as a JSON list of dictionaries containing 'title', 'tags' (list of strings), 'content' (the template text), and 'tip', for example:\n"
+            "[\n"
+            "  {\n"
+            "    \"title\": \"Custom Work Experience Template\",\n"
+            "    \"tags\": [\"Python\", \"FastAPI\", \"SQL\"],\n"
+            "    \"content\": \"Developed a high-performance backend API using FastAPI and SQL to handle <metric> daily transactions, reducing average latency by <metric>.\",\n"
+            "    \"tip\": \"Make sure to quantify the metrics based on your actual achievements.\"\n"
+            "  }\n"
+            "]\n"
+            "Return nothing but the JSON array."
+        )
+        
+        try:
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.5,
+                    max_output_tokens=1024,
+                    response_mime_type="application/json",
+                    response_schema={
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "title": {"type": "STRING"},
+                                "tags": {
+                                    "type": "ARRAY",
+                                    "items": {"type": "STRING"}
+                                },
+                                "content": {"type": "STRING"},
+                                "tip": {"type": "STRING"}
+                            },
+                            "required": ["title", "tags", "content", "tip"]
+                        }
+                    }
+                )
+            )
+        except Exception:
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.5,
+                    max_output_tokens=1024,
+                )
+            )
+        
+        if response and hasattr(response, 'text') and response.text:
+            cleaned = response.text.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("```")[1]
+                if cleaned.startswith("json"):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+            if cleaned.endswith("```"):
+                cleaned = cleaned[:-3].strip()
+            
+            try:
+                tpls = json.loads(cleaned)
+                if isinstance(tpls, list) and tpls:
+                    return tpls
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"Error in generate_personalized_templates: {e}")
+    return []
+
+# Export public API
+__all__ = [
+    'check_gemini_health',
+    'chat_gemini',
+    'chat_gemini_streaming',
+    'get_suggested_questions',
+    'build_resume_context',
+    'parse_resume_via_gemini',
+    'generate_personalized_suggestions',
+    'generate_personalized_templates'
+]
