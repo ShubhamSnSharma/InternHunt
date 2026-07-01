@@ -29,7 +29,7 @@
 
 ---
 
-[Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Usage](#-usage) • [Tech Stack](#-tech-stack) • [Contributing](#-contributing)
+[Features](#-features) • [Workflow](#-system-architecture--workflow) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Machine Learning](#-machine-learning-model) • [Scrapers](#-job-scrapers--recommendations) • [Database](#-database--persistence)
 
 </div>
 
@@ -61,7 +61,7 @@
 
 ### 🔐 Admin Dashboard
 ![Admin Dashboard](./screenshots/admin-dashboard.png)
-*User management and analytics powered by Neon PostgreSQL*
+*User management and analytics with premium Plotly interactive visualizations*
 
 ---
 
@@ -69,109 +69,165 @@
 
 ### 📋 **Complete Resume Analysis Pipeline**
 
-#### **1. Resume Upload**
-- 📄 **Multi-format Support** - Upload PDF or DOCX resumes
-- 🎯 **Drag & Drop Interface** - Easy file upload (50MB limit)
-- ✅ **Instant Validation** - Real-time upload status
-- 📊 **Basic Info Extraction** - Name, email, phone, LinkedIn
+#### **1. Resume Upload & Parsing**
+- 📄 **Multi-format Support** - Upload PDF or DOCX resumes (50MB limit)
+- 🎯 **Advanced Text Extraction** - Utilizes `pypdf` and `python-docx` for reliable raw text decoding
+- 📊 **Contact Detection** - Regex filters identify Name, Email, Phone, GitHub, and LinkedIn URLs
 
-#### **2. Skills Extracted**
-- 🔍 **NLP-Powered Detection** - Identifies 100+ technical skills
-- 🏷️ **Smart Categorization** - Groups skills by domain
-- 📈 **Skill Proficiency** - Detects skill levels from context
-- 🎨 **Visual Display** - Clean, organized skill badges
+#### **2. Skill Detection & Normalization**
+- 🔍 **NLP-Powered Detection** - Identifies 100+ technical skills via a dictionary-based `spaCy` matcher
+- 🏷️ **Fuzzy Matching** - Employs `fuzzywuzzy` to recognize variations and typos (e.g. `k8s` mapped to `Kubernetes`)
+- 🎨 **Domain-based Skill Badges** - Groups parsed skills visually by category (Languages, Databases, DevOps, mobile, etc.)
 
-#### **3. AI-Detected Profile**
-- 🤖 **ML Classification** - 85.3% accurate role prediction using a local neural network (MLPClassifier) trained on deduplicated, clean resume data
-- 🎯 **Top 3 Predictions** - Shows alternative roles with confidence scores
-- 📊 **Probability Analysis** - Displays prediction confidence (highly discriminative softmax output)
-- 🔄 **25 Job Categories** - From Software Development to Engineering
+#### **3. AI-Detected Career Profile**
+- 🧠 **ML Classification** - Neural network (MLPClassifier) role prediction trained on a deduplicated unique dataset
+- 🎯 **Top 3 Role Recommendations** - Displays alternative career matches with corresponding probability scores
+- 📊 **Probability Calibration** - Sharp softmax outputs map directly to confidence ratings (High, Medium, Low)
 
-#### **4. ATS Performance Dashboard**
-- 📈 **ATS Score** - Resume compatibility with Applicant Tracking Systems
-- 🎯 **Keyword Analysis** - Identifies missing industry keywords
-- 📊 **Section Completeness** - Tracks resume sections (3/5, etc.)
-- 💡 **Optimization Tips** - Actionable suggestions to improve ATS score
+#### **4. ATS Performance Analytics**
+- 📈 **ATS Score Dial** - Tracks resume compatibility with modern Applicant Tracking Systems
+- 🎯 **Completeness Checks** - Evaluates the presence of 5 core sections (Contact, Skills, Experience, Education, Projects)
+- 💡 **Actionable Optimization Tips** - Tailored suggestions to improve formatting and add missing information
 
-#### **5. Resume Analysis**
-- 📝 **Skills Count** - Total technical skills detected (e.g., 19 skills)
-- 📄 **Sections Count** - Resume structure analysis (e.g., 3/5 sections)
-- 📊 **Completeness Score** - Overall resume quality metric
-- 🎯 **Visual Progress** - Clean progress bars and metrics
+#### **5. Double-Source Recommendations**
+- 🎓 **Tailored Courses** - Pulls matched learning path suggestions from a mapped course repository (`Courses.py`)
+- 🌐 **Live Internships** - Combines multiple APIs and web scrapers to gather matched real-time listings
 
-#### **6. Top Suggestions**
-- 💡 **AI-Powered Recommendations** - Personalized resume improvement tips
-- ✍️ **Template Suggestions** - Pre-built templates for missing sections
-- 🎯 **Priority Ranking** - Numbered suggestions by importance
-- 📝 **Quick Actions** - One-click template insertion
-
-**Example Suggestions:**
-1. Add detailed work experience with achievements
-2. Consider adding a professional summary
-3. Add a Work Experience section with achievements and dates
-4. Add a short Summary/Objective tailored to the target role
-
-#### **7. Role Alignment Analysis**
-- 🎯 **Target Role Matching** - Compares resume against specific job roles
-- 📊 **Alignment Score** - Percentage match with target position
-- 🔍 **Gap Analysis** - Identifies missing skills/experience
-- 💡 **Improvement Roadmap** - Steps to better align with role
-
-#### **8. Job Recommendations**
-- 🌐 **Multi-Source Aggregation** - Jobs from Jooble + Internshala
-- 🎯 **Personalized Matching** - Based on detected skills and role
-- 📍 **Location-based** - Filter by city and remote options
-- 🔄 **Real-time Updates** - Fresh opportunities daily
-- 📊 **Detailed Listings** - Company, location, salary, requirements
-
-**Sources:**
-- **Jooble API** - Global internship opportunities
-- **Internshala Scraper** - India-focused internships
-
-#### **9. Recommended Courses**
-- 🎓 **Skill-based Suggestions** - Courses aligned with career goals
-- 🏆 **Top Platforms** - Coursera, Udemy, edX, and more
-- 📈 **Learning Paths** - Structured roadmaps for skill development
-- ⭐ **Quality Curated** - Only the best courses recommended
-- 🎯 **Role-specific** - Tailored to your detected profile
-
-#### **10. InternHunt Assistant (AI Chatbot)**
-- 💬 **Conversational AI** - Powered by Google Gemini
-- 🎓 **Career Guidance** - Expert advice on internships and career paths
-- 📚 **Context-Aware** - Remembers your resume and preferences
-- ⚡ **Real-time Responses** - Fast and accurate answers
-- 🤝 **Interview Prep** - Tips, common questions, best practices
+#### **6. Context-Aware AI Chatbot Assistant**
+- 💬 **Gemini AI Coaching** - Conversational career chat powered by Google Gemini (`gemini-1.5-flash`)
+- 📚 **Resume-Aware System Instructions** - Chatbot reads the parsed resume details, scoring metrics, and missing keywords to suggest customized advice
 
 ---
 
-### 🔐 **Admin Dashboard**
-- 👨‍💼 **User Management** - Track all uploaded resumes
-- 📊 **Analytics** - View platform statistics and insights via dark-themed, interactive **Plotly** visualizations (Donut, Horizontal Bar, and Area charts)
-- 💾 **Cloud Database** - Powered by Neon PostgreSQL
-- 🌐 **Web-based** - Access from anywhere
-- 🔄 **Real-time Sync** - Instant data updates
-- 📈 **Resume Database** - All uploaded resumes stored securely
+## ⚙️ System Architecture & Workflow
+
+InternHunt processes resume uploads, evaluates scoring, logs user details to the database, queries external scrapers, and initializes the chatbot context in a highly structured pipeline:
+
+```mermaid
+graph TD
+    A["User Uploads PDF/DOCX Resume"] --> B["Step 1: Text Extraction (pypdf/python-docx)"]
+    B --> C["Step 2: Text Preprocessing & Cleaning (regex)"]
+    
+    C --> D1["Step 3a: Contact Info Parsing (Emails, Phones, Social URLs)"]
+    C --> D2["Step 3b: Technical Skills Matching (spaCy PhraseMatcher)"]
+    C --> D3["Step 3c: Category Prediction (TF-IDF + MLP Classifier)"]
+    
+    D3 --> E1["Top-3 Job Categories & Softmax Probabilities"]
+    D2 & D3 --> E2["ATS Scoring & Missing Keywords Identification"]
+    
+    E1 & E2 & D1 & D2 --> F["Step 4: Save Registry Entry to Neon PostgreSQL"]
+    
+    E1 & E2 --> G1["Recommend Curated Courses (Courses.py)"]
+    D2 & E1 --> G2["Recommend Live Internships (Scrapers & APIs)"]
+    
+    E1 & E2 & D2 --> H["Step 5: Initialize Gemini AI Assistant (google-genai)"]
+    H --> I["Candidate Asks Career Questions in Sidebar Chat"]
+    I --> J["Assistant Responds with Resume-Aware Context (gemini-1.5-flash)"]
+```
+
+### **Workflow Breakdown:**
+1. **Extraction & Preprocessing:** The uploaded document is parsed, stripped of raw formatting, and cleaned of non-ASCII symbols and excessive spacing.
+2. **Parallel Feature Extraction:** 
+   - **Regex filters** extract email, phone, and profile URLs.
+   - **spaCy matcher** extracts normalized skill sets.
+   - **TF-IDF Vectorizer** maps the cleaned text to 2500 terms, which are classified by the **MLPClassifier** to predict the candidate's career role.
+3. **ATS Assessment:** Core sections are checked, and missing skills are highlighted by matching actual skills against predicted career role profiles.
+4. **Data Persistence:** Candidate profiles and computed stats are logged to **Neon serverless PostgreSQL** for admin audit and analytics.
+5. **Recommendation & Assistant Routing:** Matched courses (from `Courses.py`) and job listings are displayed, and a detailed profile is built and loaded into the **Google Gemini system instructions** so the sidebar assistant chatbot can answer resume-specific questions.
 
 ---
 
-### 🎨 **Modern UI/UX**
-- 🌙 **Dark Theme** - Easy on the eyes
-- ✨ **Glassmorphism** - Modern design aesthetics
-- 📱 **Responsive** - Works on all devices
-- 🎭 **Smooth Animations** - Delightful user experience
-- 🎯 **Intuitive Flow** - Seamless user journey from upload to job search
+## 🤖 Machine Learning Model
+
+InternHunt utilizes a **custom-trained Multi-Layer Perceptron (MLP) Neural Network** classifier to automatically route resumes to 25 distinct job roles.
+
+#### **Model Architecture:**
+- **Algorithm:** Multi-Layer Perceptron Classifier (scikit-learn)
+- **Vectorization:** TF-IDF (Term Frequency-Inverse Document Frequency)
+- **Pipeline:** `TfidfVectorizer` (ngram_range=(1, 2), max_features=2500) → `MLPClassifier` (128, 64 hidden nodes)
+- **File:** `resume_classifier_v3_skills_mlp.pkl` (10.1 MB)
+- **Training Data:** `UpdatedResumeDataSet.csv` (166 unique deduplicated samples to prevent training bias)
+
+#### **Model Performance:**
+| Metric | Score |
+|--------|-------|
+| **Test Accuracy** | **85.29%** |
+| **Precision** | **88.2%** (weighted avg) |
+| **Recall** | **85.3%** (weighted avg) |
+| **F1-Score** | **81.9%** (weighted avg) |
+| **Cross-Validation** | **81.69% ± 0.85%** (3-fold Stratified) |
+
+#### **Training Configuration:**
+```python
+Pipeline([
+    ('tfidf', TfidfVectorizer(
+        max_features=2500,        # Vocabulary size limit
+        ngram_range=(1, 2),       # Unigrams & bigrams
+        min_df=1,
+        max_df=0.95,              
+        stop_words='english',     
+        lowercase=True            
+    )),
+    ('classifier', MLPClassifier(
+        hidden_layer_sizes=(128, 64),
+        activation='relu',
+        solver='adam',
+        alpha=0.1,
+        learning_rate_init=0.001,
+        max_iter=1000,
+        early_stopping=False,
+        random_state=42
+    ))
+])
+```
 
 ---
 
-## 🚀 Quick Start
+## 🌐 Job Scrapers & Recommendations
+
+The application does not rely on a single source but combines APIs and custom HTML scrapers:
+
+* **Internshala Scraper:** A Python scraper using `requests` and `BeautifulSoup4` (`lxml` parser) to scrape India-focused listings. It queries Internshala’s keyword URL structures (e.g. `https://internshala.com/internships/keywords-{query}`) and parses details like stipends, durations, and application links directly from individual internship cards.
+* **Remotive API:** Pulls remote developer opportunities from Remotive's free public endpoint based on the top 5 parsed skills.
+* **Jooble API:** Queries the global Jooble job search engine using HTTP POST requests containing skill keywords and locations. (Requires `JOOBLE_API_KEY`).
+* **GitHub Repositories Search:** Scrapes GitHub search listings looking for repositories tagged with `hiring` or `internship` matching the candidate's core skills.
+
+---
+
+## 💾 Database & Persistence
+
+InternHunt supports dual persistence schemes for local development and cloud production:
+
+* **Neon serverless PostgreSQL:** (Preferred in production). Connects using `psycopg2` via a connection string environment variable (`DATABASE_URL`).
+* **Local MySQL:** (Fallback for local development). Connects using `pymysql` based on local configuration credentials.
+
+### **Logged User Registry Schema:**
+```sql
+CREATE TABLE IF NOT EXISTS user_data (
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR(500) NOT NULL,
+    Email_ID VARCHAR(500) NOT NULL,
+    resume_score VARCHAR(8) NOT NULL,
+    Timestamp VARCHAR(50) NOT NULL,
+    Page_no VARCHAR(5) NOT NULL,
+    Predicted_Field TEXT NOT NULL,
+    User_level TEXT NOT NULL,
+    Actual_skills TEXT NOT NULL,
+    Recommended_skills TEXT NOT NULL,
+    Recommended_courses TEXT NOT NULL
+);
+```
+
+---
+
+## 🚀 Installation
 
 ### Prerequisites
-
 - Python 3.9 or higher
 - pip package manager
 - Google Gemini API key ([Get one here](https://ai.google.dev/))
 
-### Installation
+### Steps
 
 1. **Clone the repository**
 ```bash
@@ -201,13 +257,14 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 ```
 
 5. **Set up environment variables**
-```bash
-# Copy the example file
-cp .env.example .env
+Create a `.env` file in the root directory:
+```env
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
 
-# Edit .env and add your API keys
-# GEMINI_API_KEY=your_api_key_here
-# GEMINI_MODEL=gemini-1.5-flash
+# Neon Database (PostgreSQL)
+DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
 ```
 
 6. **Run the application**
@@ -216,148 +273,6 @@ streamlit run App.py
 ```
 
 The app will open in your browser at `http://localhost:8501` 🎉
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Google Gemini API
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
-
-# Neon Database (PostgreSQL) - Production
-DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
-
-# MySQL (Local Development - Optional)
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=internhunt
-```
-
-### Streamlit Secrets (For Deployment)
-
-For Streamlit Cloud deployment, add secrets in the dashboard:
-
-```toml
-# .streamlit/secrets.toml
-GEMINI_API_KEY = "your_api_key_here"
-GEMINI_MODEL = "gemini-1.5-flash"
-
-# Neon Database
-DATABASE_URL = "postgresql://user:password@host.neon.tech/dbname?sslmode=require"
-```
-
-### Setting up Neon Database
-
-1. **Create a Neon account** at [neon.tech](https://neon.tech)
-2. **Create a new project** and database
-3. **Copy the connection string** from the dashboard
-4. **Add to `.env`** file as `DATABASE_URL`
-5. **Run migrations** (if any) to set up tables
-
----
-
-## � Deployment Architecture
-
-This project uses a **dual-deployment strategy** for optimal user experience:
-
-### 🎨 **Landing Page** (Vercel)
-- **URL:** [internhuntt.vercel.app](https://internhuntt.vercel.app)
-- **Tech:** React + TypeScript + Tailwind CSS v4
-- **Design:** Figma → React components
-- **Features:** Glassmorphism, smooth animations (Motion)
-- **Icons:** Lucide React
-- **UI Components:** Shadcn/ui
-- **Hosting:** Vercel (Fast CDN, global edge network)
-
-### ⚡ **Web Application** (Streamlit Cloud)
-- **URL:** [internhunt.streamlit.app](https://internhunt.streamlit.app)
-- **Tech:** Python + Streamlit
-- **Purpose:** Full-featured AI-powered platform
-- **Hosting:** Streamlit Cloud (Free Python app hosting)
-
-### � **Database** (Neon)
-- **Service:** [Neon](https://neon.tech) - Serverless PostgreSQL
-- **Purpose:** User data, analytics, admin dashboard
-- **Migration:** Originally MySQL (local) → Now Neon (cloud)
-- **Benefits:** Auto-scaling, branching, serverless
-
-### �🔗 **How They Connect**
-```
-User visits Landing Page (Vercel)
-         ↓
-Clicks "Upload Resume" button
-         ↓
-Redirects to Web App (Streamlit)
-         ↓
-App connects to Neon Database
-         ↓
-Full InternHunt experience!
-```
-
-### 📦 **Deploy Your Own**
-
-#### **Vercel (Landing Page)**
-1. Push your landing page code to GitHub
-2. Import project on [Vercel](https://vercel.com)
-3. Deploy with one click!
-
-#### **Streamlit Cloud (Web App)**
-1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Add secrets (API keys) in dashboard
-5. Deploy!
-
-#### **Neon (Database)**
-1. Create account at [neon.tech](https://neon.tech)
-2. Create a new PostgreSQL database
-3. Copy connection string
-4. Add to Streamlit secrets as `DATABASE_URL`
-5. Database is ready!
-
----
-## 🛠️ Tech Stack
-
-### **Landing Page (Vercel)**
-- ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB) **React** - UI library
-- ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white) **TypeScript** - Type-safe JavaScript
-- ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) **Tailwind CSS v4** - Utility-first CSS
-- ![Motion](https://img.shields.io/badge/Motion-FF0080?style=flat-square&logo=framer&logoColor=white) **Motion** - Animation library
-- **Shadcn/ui** - Component library
-- **Lucide React** - Icon library
-
-### **Web Application (Streamlit)**
-- ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white) **Streamlit** - Web framework
-- ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white) **HTML/CSS** - Custom styling
-- ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) **JavaScript** - Interactive elements
-
-### **Backend & ML**
-- ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) **Python 3.9+** - Core language
-- ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikit-learn&logoColor=white) **scikit-learn** - ML classification
-- ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white) **PyTorch** - Deep learning
-- ![NLTK](https://img.shields.io/badge/NLTK-154f3c?style=flat-square) **NLTK** - Natural language processing
-
-### **AI & APIs**
-- ![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat-square&logo=google&logoColor=white) **Google Gemini** - Conversational AI
-- ![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-43B02A?style=flat-square) **BeautifulSoup** - Web scraping
-- ![Requests](https://img.shields.io/badge/Requests-2CA5E0?style=flat-square) **Requests** - HTTP library
-
-### **Data Processing**
-- ![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white) **Pandas** - Data manipulation
-- ![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat-square&logo=numpy&logoColor=white) **NumPy** - Numerical computing
-- **PyPDF2 & python-docx** - Document parsing
-
-### **Database**
-- ![Neon](https://img.shields.io/badge/Neon-00E599?style=flat-square&logo=postgresql&logoColor=white) **Neon** - Serverless PostgreSQL
-- ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white) **PostgreSQL** - Relational database
-- ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white) **MySQL** - Alternative database (local development)
 
 ---
 
@@ -401,363 +316,31 @@ internhunt2/
 ├── 📂 Uploaded_Resumes/                # User uploaded resume storage
 │   └── .gitkeep                        # Preserve directory in Git
 │
-├── � screenshots/                     # Application screenshots for README
-│   ├── landing-page.png                # Vercel landing page
-│   ├── resume-upload.png               # Resume upload interface
-│   ├── skills-extracted.png            # Skills detection display
-│   ├── ai-profile.png                  # ML role prediction
-│   ├── ats-dashboard.png               # ATS performance metrics
-│   ├── suggestions.png                 # AI improvement suggestions
-│   ├── chatbot.png                     # Gemini AI assistant
-│   ├── courses.png                     # Course recommendations
-│   ├── job-search.png                  # Job listings
-│   └── admin-dashboard.png             # Admin panel
-│
-└── 🐍 venv/                            # Virtual environment (not in Git)
+└── 📁 screenshots/                     # Application screenshots for README
 ```
-
-### **Key Files Explained:**
-
-**Core Application:**
-- `App.py` - Main Streamlit app with complete user flow (3814 lines)
-- `styles.py` - All CSS styling, glassmorphism, animations (70KB)
-- `chat_service.py` - Google Gemini integration for AI chatbot
-
-**Data Processing:**
-- `resume_parser.py` - spaCy-based NLP for skill extraction
-- `utils.py` - Helper functions for text processing
-- `database.py` - Neon PostgreSQL connection and queries
-
-**External Integrations:**
-- `api_services.py` - Jooble API for global job listings
-- `job_scrapers.py` - Internshala web scraping
-- `Courses.py` - Course recommendation logic
-
-**ML Model:**
-- `resume_classifier_v3_skills_mlp.pkl` - TF-IDF + MLPClassifier (85.29% holdout accuracy)
-- `soft_skill_role_trainer.py` - Local training script with Stratified K-Fold cross-validation
-- `UpdatedResumeDataSet.csv` - 166 deduplicated resume samples, 25 categories
-- `ResumeClassification_Model.ipynb` - Exploratory training notebook
-
-**Configuration:**
-- `.env.example` - Template for API keys (Gemini, Database)
-- `.streamlit/config.toml` - Streamlit theme and settings
-- `requirements.txt` - 30+ Python packages
-
-**Documentation:**
-- `README.md` - Complete project documentation
-- `LICENSE` - MIT License
-- `PRIVACY.md` - Privacy policy for users
-
----
-
-## 🤖 Machine Learning Model
-
-### Resume Classification Model
-
-InternHunt uses a **custom-trained Multi-Layer Perceptron (MLP) Neural Network** with TF-IDF vectorization to automatically categorize resumes into 25 job roles with **85.29% holdout accuracy** on a fully cleaned and deduplicated dataset.
-
-#### **Model Architecture:**
-- **Algorithm:** Multi-Layer Perceptron Classifier (scikit-learn)
-- **Vectorization:** TF-IDF (Term Frequency-Inverse Document Frequency)
-- **Pipeline:** `TfidfVectorizer` → `MLPClassifier`
-- **File:** `resume_classifier_v3_skills_mlp.pkl` (10.1 MB)
-- **Training Data:** `UpdatedResumeDataSet.csv` (166 unique deduplicated samples after removing duplicate rows)
-
-#### **Model Performance:**
-| Metric | Score |
-|--------|-------|
-| **Test Accuracy** | **85.29%** |
-| **Precision** | **88.2%** (weighted) |
-| **Recall** | **85.3%** (weighted) |
-| **F1-Score** | **81.9%** (weighted) |
-| **Cross-Validation** | **81.69% ± 0.85%** (3-fold Stratified) |
-
-#### **Training Configuration:**
-```python
-Pipeline([
-    ('tfidf', TfidfVectorizer(
-        max_features=2500,        # Vocabulary size limit
-        ngram_range=(1, 2),       # Unigrams & bigrams
-        min_df=1,
-        max_df=0.95,              
-        stop_words='english',     
-        lowercase=True            
-    )),
-    ('classifier', MLPClassifier(
-        hidden_layer_sizes=(128, 64),
-        activation='relu',
-        solver='adam',
-        alpha=0.1,
-        learning_rate_init=0.001,
-        max_iter=1000,
-        early_stopping=False,
-        random_state=42
-    ))
-])
-```
-
-#### **Dataset Split:**
-- **Training Set:** 132 samples (80%)
-- **Test Set:** 34 samples (20%)
-- **Stratified Split:** Maintains class distribution
-- **Total Classes:** 25 job categories
-
-#### **How It Works:**
-1. **Resume Upload** → User uploads PDF/DOCX resume
-2. **Text Extraction** → PyPDF2/python-docx extracts raw text
-3. **Text Cleaning** → Remove HTML tags, URLs, extra whitespace
-4. **TF-IDF Vectorization** → Convert text to numerical features (5000 features max)
-5. **Classification** → Logistic Regression predicts job category
-6. **Probability Analysis** → Returns confidence scores for top 3 predictions
-
-#### **Supported Job Categories (25 Total):**
-
-**Programming & Development:**
-- Java Developer (84 samples)
-- Python Developer (48 samples)
-- DotNet Developer (28 samples)
-- Web Designing (45 samples)
-- SAP Developer (24 samples)
-
-**Data & AI:**
-- Data Science (40 samples)
-- Hadoop (42 samples)
-- ETL Developer (40 samples)
-- Database (33 samples)
-
-**DevOps & Infrastructure:**
-- DevOps Engineer (55 samples)
-- Network Security Engineer (25 samples)
-
-**Testing:**
-- Testing (70 samples)
-- Automation Testing (26 samples)
-
-**Engineering:**
-- Mechanical Engineer (40 samples)
-- Electrical Engineering (30 samples)
-- Civil Engineer (24 samples)
-
-**Business & Operations:**
-- Business Analyst (28 samples)
-- Operations Manager (40 samples)
-- PMO (30 samples)
-- HR (44 samples)
-- Sales (40 samples)
-
-**Specialized:**
-- Blockchain (40 samples)
-- Advocate (20 samples)
-- Arts (36 samples)
-- Health and fitness (30 samples)
-
-#### **Model Features:**
-- ✅ **Multi-class Classification** - Predicts from 25 categories
-- ✅ **Probability Scores** - Returns confidence for each prediction
-- ✅ **Top-3 Predictions** - Shows 3 most likely roles with probabilities
-- ✅ **Version Compatibility** - Warns if sklearn version mismatch
-- ✅ **Balanced Classes** - Uses class_weight='balanced' for fair predictions
-- ✅ **Fallback Handling** - Graceful degradation if model unavailable
-
-#### **Technical Implementation:**
-```python
-# Model loading with version check
-data = joblib.load("resume_classifier_v3_skills_mlp.pkl")
-model = data["model"]  # Pipeline object
-sklearn_version = data.get("sklearn_version")
-
-# Prediction with probabilities
-predicted_category = str(model.predict([resume_text])[0])
-probabilities = model.predict_proba([resume_text])[0]
-classes = model.classes_
-
-# Top 3 predictions with confidence evaluation
-top_3_idx = probabilities.argsort()[-3:][::-1]
-top_3_predictions = [
-    {"category": str(classes[idx]), "probability": float(probabilities[idx])}
-    for idx in top_3_idx
-]
-```
-
-#### **Training Details:**
-- **Trained on:** Local machine / training script
-- **Training Time:** < 10 seconds
-- **Script:** `soft_skill_role_trainer.py`
-- **scikit-learn Version:** 1.6+
-- **Random State:** 42 (for reproducibility)
-
-#### **Technologies Used:**
-- **scikit-learn 1.7.2** - ML framework (Logistic Regression, TF-IDF)
-- **joblib** - Model serialization and loading
-- **pandas** - Data manipulation and preprocessing
-- **PyPDF2 / python-docx** - Resume text extraction
-- **Streamlit caching** - Fast model loading with `@st.cache_resource`
-
----
-
-## 🎯 Usage Guide
-
-### **Complete User Journey**
-
-#### **Step 1: Upload Your Resume** 📄
-1. Visit [internhunt.streamlit.app](https://internhunt.streamlit.app)
-2. Drag and drop your resume or click "Browse files Resume"
-3. Supported formats: PDF, DOCX (max 50MB)
-4. Wait for upload confirmation ✅
-
-#### **Step 2: View Basic Info** 👤
-- **Name** extracted from resume
-- **Email** address detected
-- **Phone** number identified
-- **LinkedIn** profile link (if present)
-
-#### **Step 3: Skills Extracted** 🔍
-- View all **technical skills** detected from your resume
-- Skills organized by category (Programming, Frameworks, Tools, etc.)
-- **19+ skills** typically identified
-- Clean visual display with skill badges
-
-#### **Step 4: AI-Detected Profile** 🤖
-- See your **predicted job role** (99.5% accuracy)
-- View **Top 3 role predictions** with confidence scores
-- Example: "Python Developer (85%), Data Scientist (10%), Web Developer (5%)"
-- Understand which category best fits your profile
-
-#### **Step 5: ATS Performance Dashboard** 📊
-- Check your **ATS compatibility score**
-- See **keyword analysis** and missing terms
-- View **section completeness** (e.g., 3/5 sections)
-- Get optimization tips to improve ATS score
-
-#### **Step 6: Resume Analysis** 📝
-- **Skills Count**: Total skills detected (e.g., 19 skills)
-- **Sections Count**: Resume structure (e.g., 3/5 sections)
-- **Completeness Score**: Overall quality metric
-- Visual progress bars for each metric
-
-#### **Step 7: Top Suggestions** 💡
-Review AI-powered recommendations:
-1. Add detailed work experience with achievements
-2. Consider adding a professional summary
-3. Add a Work Experience section with achievements and dates
-4. Add a short Summary/Objective tailored to the target role
-
-**Quick Actions:**
-- ✨ Add Work Experience Template
-- 📝 Add Summary/Objective Template
-
-#### **Step 8: Role Alignment Analysis** 🎯
-- See how your resume aligns with target roles
-- View **alignment percentage** for specific positions
-- Identify **skill gaps** and missing experience
-- Get roadmap to improve role fit
-
-#### **Step 9: Job Recommendations** 🌐
-Browse personalized internship opportunities:
-
-**From Jooble:**
-- Global internship listings
-- Filtered by your detected role
-- Location-based results
-
-**From Internshala:**
-- India-focused internships
-- Real-time scraping
-- Detailed company info, stipend, duration
-- Direct application links
-
-#### **Step 10: Recommended Courses** 🎓
-- View courses tailored to your profile
-- Platforms: Coursera, Udemy, edX, etc.
-- Organized by skill development path
-- Click to enroll directly
-
-#### **Bonus: InternHunt Assistant** 🤖
-- Open sidebar chat
-- Ask career questions
-- Get interview tips
-- Receive personalized advice
-- Powered by Google Gemini AI
-
----
-
-### **Admin Dashboard Access** 🔐
-*For administrators only*
-
-1. Access admin panel
-2. View all uploaded resumes
-3. Check user analytics
-4. Monitor platform statistics
-5. Manage resume database (Neon PostgreSQL)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
-
+Contributions are welcome! Please follow these guidelines:
 1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. **Commit your changes**
-   ```bash
-   git commit -m 'Add some AmazingFeature'
-   ```
-4. **Push to the branch**
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
+2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the branch** (`git push origin feature/AmazingFeature`)
 5. **Open a Pull Request**
-
-### Development Guidelines
-- Follow PEP 8 style guide
-- Add docstrings to functions
-- Test your changes thoroughly
-- Update documentation as needed
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 👨‍💻 Author
 
 **Shubham Sharma**
-
 - GitHub: [@ShubhamSnSharma](https://github.com/ShubhamSnSharma)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Email: your.email@example.com
 
 ---
 
 ## 🙏 Acknowledgments
-
-- [Google Gemini](https://ai.google.dev/) for the amazing AI capabilities
-- [Streamlit](https://streamlit.io/) for the fantastic web framework
-- [Internshala](https://internshala.com/) for internship data
-- All open-source contributors
-
----
-
-## 📊 Stats
-
-![GitHub stars](https://img.shields.io/github/stars/ShubhamSnSharma/internhunt2?style=social)
-![GitHub forks](https://img.shields.io/github/forks/ShubhamSnSharma/internhunt2?style=social)
-![GitHub issues](https://img.shields.io/github/issues/ShubhamSnSharma/internhunt2)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/ShubhamSnSharma/internhunt2)
-
----
-
-<div align="center">
-
-### ⭐ Star this repo if you find it helpful!
-
-Made with ❤️ by Shubham Sharma
-
-</div>
+- [Google Gemini](https://ai.google.dev/) for conversational AI capabilities.
+- [Streamlit](https://streamlit.io/) for the clean web framework.
+- [Internshala](https://internshala.com/) for internship listings.
+- All open-source contributors.
