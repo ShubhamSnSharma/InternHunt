@@ -243,6 +243,12 @@ def fuzzy_label(probability: float) -> str:
         return "Low"
 
 
+@st.cache_resource
+def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+
 def predict_resume_category(resume_text, model=None):
     """
     Predict resume job category using the trained pipeline.
@@ -272,12 +278,17 @@ def predict_resume_category(resume_text, model=None):
 
     try:
         model_input = prepare_text_for_role_model(resume_text, model)
+        model_type = getattr(model, "_internhunt_model_type", "Unknown")
 
-        # Primary prediction
-        predicted_category = model.predict([model_input])[0]
+        if model_type == "MLPClassifier_Embeddings":
+            embedder = get_embedding_model()
+            features = embedder.encode([model_input], show_progress_bar=False)
+            predicted_category = model.predict(features)[0]
+            probabilities = model.predict_proba(features)[0]
+        else:
+            predicted_category = model.predict([model_input])[0]
+            probabilities = model.predict_proba([model_input])[0]
 
-        # Probability vector over all classes
-        probabilities = model.predict_proba([model_input])[0]
         classes = model.classes_
 
         # Top-3 indices sorted by descending probability
