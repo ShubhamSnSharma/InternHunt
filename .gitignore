@@ -75,6 +75,6 @@ soft_skill_role_trainer.py
 skill_role_validation_report.json
 
 # ──────────────────────────────────────────
-# Fonts (large binary assets, load from CDN in production)
+# Fonts — tracked in repo (required by deployed app for logo rendering)
 # ──────────────────────────────────────────
-nevera_font/
+# nevera_font/ is intentionally kept in the repo
