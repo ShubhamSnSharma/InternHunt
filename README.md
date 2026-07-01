@@ -82,9 +82,9 @@
 - 🎨 **Visual Display** - Clean, organized skill badges
 
 #### **3. AI-Detected Profile**
-- 🤖 **ML Classification** - 99.5% accurate role prediction using Logistic Regression
+- 🤖 **ML Classification** - 85.3% accurate role prediction using a local neural network (MLPClassifier) trained on deduplicated, clean resume data
 - 🎯 **Top 3 Predictions** - Shows alternative roles with confidence scores
-- 📊 **Probability Analysis** - Displays prediction confidence
+- 📊 **Probability Analysis** - Displays prediction confidence (highly discriminative softmax output)
 - 🔄 **25 Job Categories** - From Software Development to Engineering
 
 #### **4. ATS Performance Dashboard**
@@ -146,7 +146,7 @@
 
 ### 🔐 **Admin Dashboard**
 - 👨‍💼 **User Management** - Track all uploaded resumes
-- 📊 **Analytics** - View platform statistics and insights
+- 📊 **Analytics** - View platform statistics and insights via dark-themed, interactive **Plotly** visualizations (Donut, Horizontal Bar, and Area charts)
 - 💾 **Cloud Database** - Powered by Neon PostgreSQL
 - 🌐 **Web-based** - Access from anywhere
 - 🔄 **Real-time Sync** - Instant data updates
@@ -377,9 +377,10 @@ internhunt2/
 ├── ⚠️ error_handler.py                 # Error handling & logging
 ├── 📚 Courses.py                       # Course recommendation engine
 │
-├── 🤖 resume_classifier_v2.pkl         # Trained ML model (1.2 MB)
-├── 📊 UpdatedResumeDataSet.csv         # Training dataset (962 samples)
-├── 📓 ResumeClassification_Model.ipynb # Model training notebook
+├── 🤖 resume_classifier_v3_skills_mlp.pkl # Upgraded ML model (TF-IDF + MLP, 10.1 MB)
+├── ⚙️ soft_skill_role_trainer.py         # Local model training script
+├── 📊 UpdatedResumeDataSet.csv            # Training dataset (166 deduplicated unique samples)
+├── 📓 ResumeClassification_Model.ipynb    # Exploration model notebook
 │
 ├── 📋 requirements.txt                 # Python dependencies
 ├── 📖 README.md                        # Project documentation
@@ -433,9 +434,10 @@ internhunt2/
 - `Courses.py` - Course recommendation logic
 
 **ML Model:**
-- `resume_classifier_v2.pkl` - Logistic Regression + TF-IDF (99.5% accuracy)
-- `UpdatedResumeDataSet.csv` - 962 resume samples, 25 categories
-- `ResumeClassification_Model.ipynb` - Training notebook (Google Colab)
+- `resume_classifier_v3_skills_mlp.pkl` - TF-IDF + MLPClassifier (85.29% holdout accuracy)
+- `soft_skill_role_trainer.py` - Local training script with Stratified K-Fold cross-validation
+- `UpdatedResumeDataSet.csv` - 166 deduplicated resume samples, 25 categories
+- `ResumeClassification_Model.ipynb` - Exploratory training notebook
 
 **Configuration:**
 - `.env.example` - Template for API keys (Gemini, Database)
@@ -453,47 +455,51 @@ internhunt2/
 
 ### Resume Classification Model
 
-InternHunt uses a **custom-trained Logistic Regression model** with TF-IDF vectorization to automatically categorize resumes into 25 job roles with **99.5% accuracy**.
+InternHunt uses a **custom-trained Multi-Layer Perceptron (MLP) Neural Network** with TF-IDF vectorization to automatically categorize resumes into 25 job roles with **85.29% holdout accuracy** on a fully cleaned and deduplicated dataset.
 
 #### **Model Architecture:**
-- **Algorithm:** Logistic Regression (scikit-learn 1.7.2)
+- **Algorithm:** Multi-Layer Perceptron Classifier (scikit-learn)
 - **Vectorization:** TF-IDF (Term Frequency-Inverse Document Frequency)
-- **Pipeline:** TfidfVectorizer → LogisticRegression
-- **File:** `resume_classifier_v2.pkl` (1.2 MB)
-- **Training Data:** `UpdatedResumeDataSet.csv` (962 resume samples)
+- **Pipeline:** `TfidfVectorizer` → `MLPClassifier`
+- **File:** `resume_classifier_v3_skills_mlp.pkl` (10.1 MB)
+- **Training Data:** `UpdatedResumeDataSet.csv` (166 unique deduplicated samples after removing duplicate rows)
 
 #### **Model Performance:**
 | Metric | Score |
 |--------|-------|
-| **Test Accuracy** | **99.48%** |
-| **Precision** | **99.6%** (weighted) |
-| **Recall** | **99.5%** (weighted) |
-| **F1-Score** | **99.5%** (weighted) |
-| **Cross-Validation** | **99.48% ± 0.97%** (5-fold) |
+| **Test Accuracy** | **85.29%** |
+| **Precision** | **88.2%** (weighted) |
+| **Recall** | **85.3%** (weighted) |
+| **F1-Score** | **81.9%** (weighted) |
+| **Cross-Validation** | **81.69% ± 0.85%** (3-fold Stratified) |
 
 #### **Training Configuration:**
 ```python
 Pipeline([
     ('tfidf', TfidfVectorizer(
-        max_features=5000,        # Limit features to prevent overfitting
-        ngram_range=(1, 2),       # Use unigrams and bigrams
-        min_df=2,                 # Ignore terms in < 2 documents
-        max_df=0.95,              # Ignore terms in > 95% of documents
-        stop_words='english',     # Remove common English stop words
-        lowercase=True            # Normalize case
+        max_features=2500,        # Vocabulary size limit
+        ngram_range=(1, 2),       # Unigrams & bigrams
+        min_df=1,
+        max_df=0.95,              
+        stop_words='english',     
+        lowercase=True            
     )),
-    ('classifier', LogisticRegression(
+    ('classifier', MLPClassifier(
+        hidden_layer_sizes=(128, 64),
+        activation='relu',
+        solver='adam',
+        alpha=0.1,
+        learning_rate_init=0.001,
         max_iter=1000,
-        class_weight='balanced',  # Handle class imbalance
-        random_state=42,
-        C=1.0                     # Regularization strength
+        early_stopping=False,
+        random_state=42
     ))
 ])
 ```
 
 #### **Dataset Split:**
-- **Training Set:** 769 samples (80%)
-- **Test Set:** 193 samples (20%)
+- **Training Set:** 132 samples (80%)
+- **Test Set:** 34 samples (20%)
 - **Stratified Split:** Maintains class distribution
 - **Total Classes:** 25 job categories
 
@@ -557,28 +563,28 @@ Pipeline([
 #### **Technical Implementation:**
 ```python
 # Model loading with version check
-data = joblib.load("resume_classifier_v2.pkl")
+data = joblib.load("resume_classifier_v3_skills_mlp.pkl")
 model = data["model"]  # Pipeline object
-sklearn_version = data.get("sklearn_version")  # "1.7.2"
+sklearn_version = data.get("sklearn_version")
 
 # Prediction with probabilities
-predicted_category = model.predict([resume_text])[0]
+predicted_category = str(model.predict([resume_text])[0])
 probabilities = model.predict_proba([resume_text])[0]
 classes = model.classes_
 
-# Top 3 predictions
+# Top 3 predictions with confidence evaluation
 top_3_idx = probabilities.argsort()[-3:][::-1]
 top_3_predictions = [
-    {"category": classes[idx], "probability": probabilities[idx]}
+    {"category": str(classes[idx]), "probability": float(probabilities[idx])}
     for idx in top_3_idx
 ]
 ```
 
 #### **Training Details:**
-- **Trained on:** Google Colab
-- **Training Time:** < 1 minute
-- **Notebook:** `ResumeClassification_Model.ipynb`
-- **scikit-learn Version:** 1.7.2
+- **Trained on:** Local machine / training script
+- **Training Time:** < 10 seconds
+- **Script:** `soft_skill_role_trainer.py`
+- **scikit-learn Version:** 1.6+
 - **Random State:** 42 (for reproducibility)
 
 #### **Technologies Used:**
