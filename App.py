@@ -12,6 +12,7 @@ import streamlit as st
 from streamlit_lottie import st_lottie
 import pandas as pd
 import base64
+import plotly.express as px
 import random
 import time
 import datetime
@@ -283,10 +284,10 @@ def predict_resume_category(resume_text, model=None):
         if model_type == "MLPClassifier_Embeddings":
             embedder = get_embedding_model()
             features = embedder.encode([model_input], show_progress_bar=False)
-            predicted_category = model.predict(features)[0]
+            predicted_category = str(model.predict(features)[0])
             probabilities = model.predict_proba(features)[0]
         else:
-            predicted_category = model.predict([model_input])[0]
+            predicted_category = str(model.predict([model_input])[0])
             probabilities = model.predict_proba([model_input])[0]
 
         classes = model.classes_
@@ -296,7 +297,7 @@ def predict_resume_category(resume_text, model=None):
 
         top_3_predictions = [
             {
-                "category"   : classes[idx],
+                "category"   : str(classes[idx]),
                 "probability": float(probabilities[idx]),
                 "fuzzy_label": fuzzy_label(probabilities[idx]),   # ← NEW
             }
@@ -4529,20 +4530,77 @@ def main():
                     chart_col1, chart_col2 = st.columns(2)
                     
                     with chart_col1:
-                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>Top Career Fields</h4></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>Top Career Fields</h4></div>", unsafe_allow_html=True)
                         field_counts = df['Predicted Field'].value_counts().reset_index()
                         field_counts.columns = ['Field', 'Count']
-                        st.bar_chart(field_counts.set_index('Field'), height=280)
+                        
+                        # Donut chart
+                        fig_fields = px.pie(
+                            field_counts,
+                            names="Field",
+                            values="Count",
+                            hole=0.4,
+                            color_discrete_sequence=px.colors.sequential.Indigo_r,
+                        )
+                        fig_fields.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font=dict(family="sans-serif", color="#CBD5E1"),
+                            showlegend=True,
+                            legend=dict(
+                                orientation="h",
+                                yanchor="top",
+                                y=-0.15,
+                                xanchor="center",
+                                x=0.5,
+                                font=dict(size=10)
+                            ),
+                            margin=dict(t=10, b=10, l=10, r=10),
+                            height=320,
+                        )
+                        fig_fields.update_traces(
+                            textposition='inside',
+                            textinfo='percent',
+                            insidetextorientation='horizontal'
+                        )
+                        st.plotly_chart(fig_fields, use_container_width=True, config={'displayModeBar': False})
                         
                     with chart_col2:
-                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>Experience Levels</h4></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>Experience Levels</h4></div>", unsafe_allow_html=True)
                         level_counts = df['User Level'].value_counts().reset_index()
                         level_counts.columns = ['Level', 'Count']
-                        st.bar_chart(level_counts.set_index('Level'), height=280)
+                        
+                        # Bar chart with purple/indigo sequence
+                        fig_levels = px.bar(
+                            level_counts,
+                            x="Count",
+                            y="Level",
+                            orientation="h",
+                            color="Level",
+                            color_discrete_sequence=px.colors.sequential.Purples_r,
+                        )
+                        fig_levels.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font=dict(family="sans-serif", color="#CBD5E1"),
+                            showlegend=False,
+                            xaxis=dict(
+                                showgrid=True,
+                                gridcolor="rgba(255,255,255,0.05)",
+                                tickformat=",d"
+                            ),
+                            yaxis=dict(
+                                showgrid=False,
+                                categoryorder="total ascending"
+                            ),
+                            margin=dict(t=10, b=10, l=10, r=10),
+                            height=320,
+                        )
+                        st.plotly_chart(fig_levels, use_container_width=True, config={'displayModeBar': False})
                         
                     # Third Chart: Score Spread Area Chart
-                    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-                    st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>ATS Score Frequency Distribution</h4></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>ATS Score Frequency Distribution</h4></div>", unsafe_allow_html=True)
                     
                     # Create score buckets: 0-40, 41-60, 61-80, 81-100
                     def get_bucket(val):
@@ -4555,7 +4613,34 @@ def main():
                     bucket_order = ["0-40% (Poor)", "41-60% (Average)", "61-80% (Good)", "81-100% (Excellent)"]
                     score_counts = df['Score_Range'].value_counts().reindex(bucket_order).fillna(0).reset_index()
                     score_counts.columns = ['Score Bracket', 'Candidates Count']
-                    st.area_chart(score_counts.set_index('Score Bracket'), height=240)
+                    
+                    # Smooth area/line chart
+                    fig_scores = px.area(
+                        score_counts,
+                        x="Score Bracket",
+                        y="Candidates Count",
+                        markers=True,
+                    )
+                    fig_scores.update_traces(
+                        line=dict(color="#6366F1", width=3),
+                        fillcolor="rgba(99, 102, 241, 0.15)",
+                        mode="lines+markers",
+                        marker=dict(size=8, color="#8B5CF6", line=dict(color="#FFFFFF", width=1.5))
+                    )
+                    fig_scores.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(family="sans-serif", color="#CBD5E1"),
+                        xaxis=dict(showgrid=False),
+                        yaxis=dict(
+                            showgrid=True,
+                            gridcolor="rgba(255,255,255,0.05)",
+                            tickformat=",d"
+                        ),
+                        margin=dict(t=15, b=15, l=15, r=15),
+                        height=260,
+                    )
+                    st.plotly_chart(fig_scores, use_container_width=True, config={'displayModeBar': False})
                     
                 with tab_database:
                     # --- Candidate registry Search & Filters ---

@@ -50,3 +50,6 @@ python-Levenshtein>=0.12.0
 
 # AI/ML API
 google-genai>=1.0.0
+
+# Visualization
+plotly>=6.8.0

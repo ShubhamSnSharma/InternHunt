@@ -55,6 +55,7 @@ logs/
 # ──────────────────────────────────────────
 *.pkl
 !resume_classifier_v2.pkl
+!resume_classifier_v3_skills_mlp.pkl
 *.csv
 *.model
 *.h5
@@ -70,8 +71,7 @@ Uploaded_Resumes/*.docx
 
 # ──────────────────────────────────────────
 # Internal dev / training artifacts
-# ──────────────────────────────────────────
-soft_skill_role_trainer.py
+# soft_skill_role_trainer.py is now tracked
 skill_role_validation_report.json
 
 # ──────────────────────────────────────────
