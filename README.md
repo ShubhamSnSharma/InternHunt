@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎯 InternHunt
+# InternHunt
 
 ### AI-Powered Internship Matching Platform
 
