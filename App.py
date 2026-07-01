@@ -4540,7 +4540,7 @@ def main():
                             names="Field",
                             values="Count",
                             hole=0.4,
-                            color_discrete_sequence=px.colors.sequential.Indigo_r,
+                            color_discrete_sequence=px.colors.sequential.RdPu_r,
                         )
                         fig_fields.update_layout(
                             paper_bgcolor="rgba(0,0,0,0)",
