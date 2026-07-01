@@ -22,7 +22,8 @@ import time
 from typing import List, Dict, Any, Optional, Tuple, Generator
 from dotenv import load_dotenv
 import random
-import google.generativeai as genai
+from google import genai
+from google.genai import types as genai_types
 
 def _get_gemini_config() -> Tuple[str, str]:
     """Read Gemini API key and model from env variables or Streamlit secrets."""
@@ -144,12 +145,12 @@ def check_gemini_health() -> Dict[str, Any]:
                 "model": model
             }
         
-        # Configure the API key
-        genai.configure(api_key=api_key)
-        
-        # Test the connection with a simple request
-        model_instance = genai.GenerativeModel(model)
-        response = model_instance.generate_content("Hello, this is a test.")
+        # Create client and test the connection with a simple request
+        client = genai.Client(api_key=api_key)
+        client.models.generate_content(
+            model=model,
+            contents="Hello, this is a test."
+        )
         
         return {
             "status": "healthy",
@@ -183,11 +184,8 @@ def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = 
         if not api_key or api_key == "your_gemini_api_key_here":
             return "I need a Gemini API key to work. Please configure GEMINI_API_KEY in your environment variables."
         
-        # Configure Gemini
-        genai.configure(api_key=api_key)
-        
-        # Prepare the conversation for Gemini
-        model = genai.GenerativeModel(model_name)
+        # Create Gemini client
+        client = genai.Client(api_key=api_key)
         
         # Prepare system prompt with resume context
         sys_prompt = system_prompt or SYSTEM_PROMPT_BASE
@@ -227,32 +225,15 @@ def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = 
             f"Assistant:"
         )
         
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt,
+            config=genai_types.GenerateContentConfig(
                 temperature=0.7,
                 top_p=0.9,
                 top_k=40,
-                max_output_tokens=4096,  # Significantly increased from 1024
+                max_output_tokens=4096,
             ),
-            safety_settings=[
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                },
-            ]
         )
         
         # Check if response was blocked by safety filters
@@ -279,13 +260,13 @@ def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = 
         # Format the response
         if response and hasattr(response, 'text'):
             try:
-                return _format_conversational_response(response.text)
-            except ValueError as e:
+                return _format_conversational_response(response.text or "")
+            except ValueError:
                 # response.text failed - try accessing parts directly
                 if hasattr(response, 'candidates') and response.candidates:
                     candidate = response.candidates[0]
                     if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                        text_parts = [part.text for part in candidate.content.parts if hasattr(part, 'text')]
+                        text_parts = [part.text or "" for part in (candidate.content.parts or []) if hasattr(part, 'text')]
                         if text_parts:
                             return _format_conversational_response(''.join(text_parts))
                 return "⚠️ I couldn't generate a proper response. Please try rephrasing your question."
@@ -466,11 +447,11 @@ def parse_resume_via_gemini(pdf_bytes: bytes) -> str:
         if not api_key:
             return ""
         
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
+        import base64
+        client = genai.Client(api_key=api_key)
         
         # Both gemini-1.5-flash and gemini-2.5-flash are multimodal and support PDF
-        model = genai.GenerativeModel(model_name)
+        pdf_part = genai_types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
         
         prompt = (
             "You are an expert resume parser OCR tool. Extract all textual content, sections, titles, dates, "
@@ -478,13 +459,13 @@ def parse_resume_via_gemini(pdf_bytes: bytes) -> str:
             "Just return the raw text extracted from the document."
         )
         
-        response = model.generate_content([
-            {
-                "mime_type": "application/pdf",
-                "data": pdf_bytes
-            },
-            prompt
-        ])
+        response = client.models.generate_content(
+            model=model_name,
+            contents=genai_types.Content(
+                parts=[pdf_part, genai_types.Part.from_text(text=prompt)],
+                role="user"
+            )
+        )
         
         if response and hasattr(response, 'text') and response.text:
             return response.text.strip()
@@ -500,8 +481,7 @@ def generate_personalized_suggestions(resume_data: Dict[str, Any]) -> List[str]:
         if not api_key:
             return []
         
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
+        client = genai.Client(api_key=api_key)
         
         context = build_resume_context(resume_data)
         
@@ -519,22 +499,20 @@ def generate_personalized_suggestions(resume_data: Dict[str, Any]) -> List[str]:
         )
         
         try:
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
                     temperature=0.4,
                     max_output_tokens=512,
                     response_mime_type="application/json",
-                    response_schema={
-                        "type": "ARRAY",
-                        "items": {"type": "STRING"}
-                    }
                 )
             )
         except Exception:
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
                     temperature=0.4,
                     max_output_tokens=512,
                 )
@@ -571,9 +549,8 @@ def generate_personalized_templates(resume_data: Dict[str, Any]) -> List[Dict[st
         if not api_key:
             return []
         
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
-        
+        client = genai.Client(api_key=api_key)
+
         context = build_resume_context(resume_data)
         
         prompt = (
@@ -598,34 +575,20 @@ def generate_personalized_templates(resume_data: Dict[str, Any]) -> List[Dict[st
         )
         
         try:
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
                     temperature=0.5,
                     max_output_tokens=1024,
                     response_mime_type="application/json",
-                    response_schema={
-                        "type": "ARRAY",
-                        "items": {
-                            "type": "OBJECT",
-                            "properties": {
-                                "title": {"type": "STRING"},
-                                "tags": {
-                                    "type": "ARRAY",
-                                    "items": {"type": "STRING"}
-                                },
-                                "content": {"type": "STRING"},
-                                "tip": {"type": "STRING"}
-                            },
-                            "required": ["title", "tags", "content", "tip"]
-                        }
-                    }
                 )
             )
         except Exception:
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
                     temperature=0.5,
                     max_output_tokens=1024,
                 )

@@ -36,7 +36,7 @@ from markdown_it import MarkdownIt
 
 # Initialize Markdown parser
 md_parser = MarkdownIt()
-from streamlit.components.v1 import html as st_html  # legacy; floating chat removed
+# st.iframe replaces the deprecated st.components.v1.html for raw HTML iframe embedding
 from job_scrapers import scrape_all, scrape_internshala, scrape_internshala_by_keywords
 from Courses import (
     ds_course, web_course, android_course, ios_course, uiux_course,
@@ -1198,7 +1198,7 @@ def display_job_recommendations_dual(skills_list, keywords_text: str, location_t
         intern_loc = st.text_input("Location", value=(location_text or "India"), placeholder="City or India", key="intern_loc_input")
     with c_ib:
         st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
-        intern_btn = st.button("Search", key="intern_search_btn", use_container_width=True)
+        intern_btn = st.button("Search", key="intern_search_btn", width='stretch')
 
     if intern_btn:
         with st.spinner("Searching Internshala..."):
@@ -2414,7 +2414,7 @@ def main():
                 </html>
                 """
                 with st.sidebar:
-                    st_html(nav_html_content, height=420)
+                    st.iframe(nav_html_content, height=420)
 
             else:
                 st.sidebar.markdown(clean_html("""
@@ -4080,7 +4080,7 @@ def main():
                     location_input = st.text_input("Location", placeholder="City, country, or leave blank", key="search_location")
                 with col3:
                     st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
-                    search_button = st.button("Search", use_container_width=True, key="opp_search_btn")
+                    search_button = st.button("Search", width='stretch', key="opp_search_btn")
 
                 # Display recommendations
                 if skills:
@@ -4359,10 +4359,10 @@ def main():
                 st.session_state['chat_use_context'] = st.checkbox("Use resume context", value=True, key="chat_use_ctx")
             with col3:
                 st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
-                clear_btn = st.button("🗑️ Clear", key="chat_clear", use_container_width=True)
+                clear_btn = st.button("🗑️ Clear", key="chat_clear", width='stretch')
             with col4:
                 st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
-                test_btn = st.button("🔥 Test", key="chat_test", use_container_width=True)
+                test_btn = st.button("🔥 Test", key="chat_test", width='stretch')
 
             if clear_btn:
                 st.session_state['chat_messages'] = []
@@ -4446,7 +4446,16 @@ def main():
                 st.rerun()
 
         elif choice == 'Admin':
-            st.subheader("📊 Admin Analytics Dashboard")
+            # Premium Subheader layout
+            st.markdown("""
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
+                <div style="width:4px; height:36px; border-radius:4px; background:linear-gradient(180deg,#6366F1,#8B5CF6);"></div>
+                <div>
+                    <h2 style="font-size:24px; font-weight:800; color:#FFFFFF; margin:0; letter-spacing:-0.5px;">📊 Admin Analytics Portal</h2>
+                    <p style="font-size:14px; color:#94A3B8; margin:2px 0 0 0;">Interactive system reporting, candidate overview and logs</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Fetch user logs
             user_data = db_manager.get_user_data(limit=1000)
@@ -4456,65 +4465,137 @@ def main():
                     'Predicted Field', 'User Level', 'Skills', 'Recommended Skills', 'Courses'
                 ])
                 
-                # --- KPI Metrics Block ---
-                st.markdown("### 📈 Key Performance Indicators")
-                col1, col2, col3, col4 = st.columns(4)
-                
-                total_users = len(df)
-                
-                # Safe casting of scores to float
+                # Safe casting/parsing of score/pages
                 df['Score_num'] = pd.to_numeric(df['Resume Score'], errors='coerce')
-                avg_score = df['Score_num'].mean()
-                if pd.isna(avg_score):
-                    avg_score = 0.0
-                    
-                top_role = df['Predicted Field'].mode()
-                top_role_str = top_role[0] if not top_role.empty else "N/A"
-                
-                # Safe calculation of average pages
+                df['Score_num'] = df['Score_num'].fillna(0.0)
                 df['Pages_num'] = pd.to_numeric(df['Pages'], errors='coerce')
-                avg_pages = df['Pages_num'].mean()
-                if pd.isna(avg_pages):
-                    avg_pages = 0.0
+                df['Pages_num'] = df['Pages_num'].fillna(1.0)
                 
-                with col1:
-                    st.metric(label="Total Resumes", value=f"{total_users}")
-                with col2:
-                    st.metric(label="Average ATS Score", value=f"{avg_score:.1f}%")
-                with col3:
-                    st.metric(label="Top Predicted Field", value=top_role_str)
-                with col4:
-                    st.metric(label="Average Page Count", value=f"{avg_pages:.1f}")
+                # Introduce layout tabs
+                tab_analytics, tab_database = st.tabs(["📈 System Analytics", "👥 Candidate Profiles"])
                 
-                # --- Charts Block ---
-                st.markdown("<hr style='opacity:0.1; margin:20px 0;'>", unsafe_allow_html=True)
-                st.markdown("### 📊 Distribution Analyses")
-                
-                chart_col1, chart_col2 = st.columns(2)
-                
-                with chart_col1:
-                    st.markdown("#### Top Career Fields")
-                    field_counts = df['Predicted Field'].value_counts().reset_index()
-                    field_counts.columns = ['Field', 'Count']
-                    st.bar_chart(field_counts.set_index('Field'))
+                with tab_analytics:
+                    # --- Glassmorphism KPI Metrics ---
+                    total_users = len(df)
+                    avg_score = df['Score_num'].mean()
+                    top_role = df['Predicted Field'].mode()
+                    top_role_str = top_role[0] if not top_role.empty else "N/A"
+                    avg_pages = df['Pages_num'].mean()
                     
-                with chart_col2:
-                    st.markdown("#### Experience Levels")
-                    level_counts = df['User Level'].value_counts().reset_index()
-                    level_counts.columns = ['Level', 'Count']
-                    st.bar_chart(level_counts.set_index('Level'))
-                
-                st.markdown("<hr style='opacity:0.1; margin:20px 0;'>", unsafe_allow_html=True)
-                st.markdown("### 📋 User Logs")
-                st.dataframe(df.drop(columns=['Score_num', 'Pages_num']))
-                
-                # Download link
-                st.markdown(
-                    get_table_download_link(df.drop(columns=['Score_num', 'Pages_num']), "user_data.csv", "📥 Download Data as CSV"),
-                    unsafe_allow_html=True
-                )
+                    # Layout custom metrics cards using HTML column layouts
+                    st.markdown(f"""
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <!-- Metric Card 1 -->
+                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Total Resumes</div>
+                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{total_users}</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #10B981; margin-top: 4px;">📈 100% database match</div>
+                        </div>
+                        <!-- Metric Card 2 -->
+                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Average ATS Score</div>
+                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{avg_score:.1f}%</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #a78bfa; margin-top: 4px;">✨ Tailored suggestions</div>
+                        </div>
+                        <!-- Metric Card 3 -->
+                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Top Predicted Field</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-top: 14px; margin-bottom: 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{top_role_str}</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #3b82f6; margin-top: 10px;">🎯 Primary field focus</div>
+                        </div>
+                        <!-- Metric Card 4 -->
+                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Avg. Page Count</div>
+                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{avg_pages:.1f}</div>
+                            <div style="font-size: 12px; font-weight: 600; color: #cbd5e1; margin-top: 4px;">📄 Standard layout</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # --- Distribution Charts Section ---
+                    st.markdown("<h3 style='font-size:18px; font-weight:700; color:#E2E8F0; margin-bottom:16px;'>📊 Distribution Analyses</h3>", unsafe_allow_html=True)
+                    
+                    chart_col1, chart_col2 = st.columns(2)
+                    
+                    with chart_col1:
+                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>Top Career Fields</h4></div>", unsafe_allow_html=True)
+                        field_counts = df['Predicted Field'].value_counts().reset_index()
+                        field_counts.columns = ['Field', 'Count']
+                        st.bar_chart(field_counts.set_index('Field'), height=280)
+                        
+                    with chart_col2:
+                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>Experience Levels</h4></div>", unsafe_allow_html=True)
+                        level_counts = df['User Level'].value_counts().reset_index()
+                        level_counts.columns = ['Level', 'Count']
+                        st.bar_chart(level_counts.set_index('Level'), height=280)
+                        
+                    # Third Chart: Score Spread Area Chart
+                    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04);'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0 0 12px 0;'>ATS Score Frequency Distribution</h4></div>", unsafe_allow_html=True)
+                    
+                    # Create score buckets: 0-40, 41-60, 61-80, 81-100
+                    def get_bucket(val):
+                        if val <= 40: return "0-40% (Poor)"
+                        if val <= 60: return "41-60% (Average)"
+                        if val <= 80: return "61-80% (Good)"
+                        return "81-100% (Excellent)"
+                    
+                    df['Score_Range'] = df['Score_num'].apply(get_bucket)
+                    bucket_order = ["0-40% (Poor)", "41-60% (Average)", "61-80% (Good)", "81-100% (Excellent)"]
+                    score_counts = df['Score_Range'].value_counts().reindex(bucket_order).fillna(0).reset_index()
+                    score_counts.columns = ['Score Bracket', 'Candidates Count']
+                    st.area_chart(score_counts.set_index('Score Bracket'), height=240)
+                    
+                with tab_database:
+                    # --- Candidate registry Search & Filters ---
+                    st.markdown("<h3 style='font-size:18px; font-weight:700; color:#E2E8F0; margin-bottom:12px;'>🔍 Filter Candidates</h3>", unsafe_allow_html=True)
+                    
+                    f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
+                    with f_col1:
+                        search_q = st.text_input("Search Name / Email", value="", placeholder="Search by name or email...", key="admin_search")
+                    with f_col2:
+                        fields_list = ["All Fields"] + sorted(list(df['Predicted Field'].dropna().unique()))
+                        selected_field = st.selectbox("Predicted Field", fields_list, index=0, key="admin_field_filter")
+                    with f_col3:
+                        levels_list = ["All Levels"] + sorted(list(df['User Level'].dropna().unique()))
+                        selected_level = st.selectbox("Experience Level", levels_list, index=0, key="admin_level_filter")
+                    
+                    # Minimum Score filter using slider
+                    min_score_filter = st.slider("Minimum ATS Score Requirement (%)", min_value=0, max_value=100, value=0, step=5, key="admin_score_filter")
+                    
+                    # Apply Filters
+                    filtered_df = df.copy()
+                    if search_q.strip():
+                        q = search_q.strip().lower()
+                        filtered_df = filtered_df[
+                            filtered_df['Name'].str.lower().str.contains(q, na=False) |
+                            filtered_df['Email'].str.lower().str.contains(q, na=False)
+                        ]
+                    if selected_field != "All Fields":
+                        filtered_df = filtered_df[filtered_df['Predicted Field'] == selected_field]
+                    if selected_level != "All Levels":
+                        filtered_df = filtered_df[filtered_df['User Level'] == selected_level]
+                        
+                    filtered_df = filtered_df[filtered_df['Score_num'] >= min_score_filter]
+                    
+                    # Drop helper columns
+                    display_df = filtered_df.drop(columns=['Score_num', 'Pages_num', 'Score_Range'], errors='ignore')
+                    
+                    st.markdown(f"<div style='margin-top:14px; margin-bottom:8px; font-size:13px; color:#94A3B8; font-weight:600;'>Showing {len(display_df)} matching candidates</div>", unsafe_allow_html=True)
+                    st.dataframe(display_df, width='stretch')
+                    
+                    # Action row for CSV download
+                    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+                    download_csv_data = display_df.to_csv(index=False)
+                    st.download_button(
+                        label="📥 Export Candidate Registry as CSV",
+                        data=download_csv_data,
+                        file_name="candidate_registry.csv",
+                        mime="text/csv",
+                        key="admin_download_btn"
+                    )
             else:
-                st.info("No user data available.")
+                st.info("No candidate profile logs found in database.")
     
     # ============ FOOTER ============ 
     st.markdown(""" 

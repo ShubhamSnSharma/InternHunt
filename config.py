@@ -29,9 +29,9 @@ class Config:
     }
 
     # API Keys
-    JOOBLE_API_KEY = os.getenv('JOOBLE_API_KEY', '4d4c75a1-1761-49c7-a003-71ed93beaf52')
-    ADZUNA_APP_ID = os.getenv('ADZUNA_APP_ID', '1178ed1c')
-    ADZUNA_API_KEY = os.getenv('ADZUNA_API_KEY', '2e96a2f4573fff0502a2a081c21b6810')
+    JOOBLE_API_KEY = os.getenv('JOOBLE_API_KEY', '')
+    ADZUNA_APP_ID = os.getenv('ADZUNA_APP_ID', '')
+    ADZUNA_API_KEY = os.getenv('ADZUNA_API_KEY', '')
     ADZUNA_COUNTRY = os.getenv('ADZUNA_COUNTRY', 'in')
     
     # AI Configuration (prefer env, then Streamlit secrets)
