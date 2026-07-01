@@ -1,45 +1,80 @@
+# ──────────────────────────────────────────
 # Python
+# ──────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.so
 .Python
+
+# ──────────────────────────────────────────
+# Virtual environments
+# ──────────────────────────────────────────
 venv/
 .venv/
+env/
+.env/
 
-# Environment variables
+# ──────────────────────────────────────────
+# Environment / secrets — NEVER commit these
+# ──────────────────────────────────────────
 .env
 .env.local
 .env.production
 .env.staging
-
-# Streamlit secrets
 .streamlit/secrets.toml
 
-# macOS
+# ──────────────────────────────────────────
+# IDE & editor configs
+# ──────────────────────────────────────────
+.vscode/
+.idea/
+.pyrightconfig.json
+pyproject.toml
+*.swp
+*.swo
+
+# ──────────────────────────────────────────
+# macOS system files
+# ──────────────────────────────────────────
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 
-# User uploaded files
-Uploaded_Resumes/*.pdf
-Uploaded_Resumes/*.doc
-Uploaded_Resumes/*.docx
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
+# ──────────────────────────────────────────
 # Logs
+# ──────────────────────────────────────────
 *.log
+logs/
 
-# ML models and datasets
+# ──────────────────────────────────────────
+# ML models & large binary artifacts
+# ──────────────────────────────────────────
 *.pkl
 !resume_classifier_v2.pkl
 *.csv
 *.model
+*.h5
+*.pt
+*.pth
+
+# ──────────────────────────────────────────
+# User-uploaded files (runtime artifacts)
+# ──────────────────────────────────────────
+Uploaded_Resumes/*.pdf
+Uploaded_Resumes/*.doc
+Uploaded_Resumes/*.docx
+
+# ──────────────────────────────────────────
+# Internal dev / training artifacts
+# ──────────────────────────────────────────
+soft_skill_role_trainer.py
+skill_role_validation_report.json
+
+# ──────────────────────────────────────────
+# Fonts (large binary assets, load from CDN in production)
+# ──────────────────────────────────────────
+nevera_font/
