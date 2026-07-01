@@ -248,10 +248,10 @@ def save_artifacts(model, summary, model_path: Path, report_path: Path):
         "training_mode": "deduplicated_full_resume",
         "fuzzy_labels": {"High": ">0.70", "Medium": "0.40-0.70", "Low": "<0.40"},
         "metrics": {
-            "holdout_accuracy": serializable_summary["holdout_accuracy"],
-            "holdout_weighted_f1": serializable_summary["holdout_weighted_f1"],
-            "cv_weighted_f1_mean": serializable_summary["cv_weighted_f1_mean"],
-            "cv_weighted_f1_std": serializable_summary["cv_weighted_f1_std"],
+            "holdout_accuracy": summary["holdout_accuracy"],
+            "holdout_weighted_f1": summary["holdout_weighted_f1"],
+            "cv_weighted_f1_mean": summary["cv_weighted_f1_mean"],
+            "cv_weighted_f1_std": summary["cv_weighted_f1_std"],
         },
     }
 
