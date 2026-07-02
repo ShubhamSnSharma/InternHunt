@@ -4,17 +4,16 @@
 
 **AI-Powered Resume Analysis & Internship Matching Platform**
 
-[![Landing Page](https://img.shields.io/badge/Landing%20Page-Live%20on%20Vercel-000000?style=for-the-badge&logo=vercel)](https://internhuntt.vercel.app)
-[![Web App](https://img.shields.io/badge/Web%20App-Live%20on%20Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://internhunt.streamlit.app)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Landing Page](https://img.shields.io/badge/Landing%20Page-Live%20on%20Vercel-black?style=flat-square&logo=vercel)](https://internhuntt.vercel.app)
+[![Web App](https://img.shields.io/badge/Web%20App-Live%20on%20Streamlit-FF4B4B?style=flat-square&logo=streamlit)](https://internhunt.streamlit.app)
+[![Classifier Accuracy](https://img.shields.io/badge/Classifier%20Accuracy-85.3%25-6366F1?style=flat-square&logo=scikit-learn&logoColor=white)](https://github.com/ShubhamSnSharma/InternHunt)
 
 *Streamline your internship search using NLP, Machine Learning, and Real-Time Web Scraping.*
 
 ---
 
-**🔗 Quick Access**  
-[🌐 Landing Page](https://internhuntt.vercel.app) • [🚀 Streamlit App](https://internhunt.streamlit.app) • [📖 Documentation](https://github.com/ShubhamSnSharma/InternHunt#readme)
+**👉 Quick Links:**  
+[Landing Page (Vercel)](https://internhuntt.vercel.app) &nbsp;•&nbsp; [Streamlit Web App](https://internhunt.streamlit.app)
 
 </div>
 
