@@ -239,45 +239,44 @@ The app will open in your browser at `http://localhost:8501` 🎉
 
 ```
 InternHunt/
-├── 📄 App.py                           # Main Streamlit application entry point
-├── 🎨 styles.py                        # Centralized UI styling and themes
-├── 🤖 chat_service.py                  # Gemini AI chatbot service
-├── 📝 resume_parser.py                 # Resume parsing & NLP analysis
-├── ⚙️ config.py                        # Configuration management
-├── 🛠️ utils.py                         # Utility functions
-├── 💾 database.py                      # Neon PostgreSQL database operations
-├── 🌐 api_services.py                  # External API integrations (Jooble)
-├── 🔍 job_scrapers.py                  # Job scraping (Internshala)
-├── ⚠️ error_handler.py                 # Error handling & logging
-├── 📚 Courses.py                       # Course recommendation engine
+├── 📄 App.py                                   # Main Streamlit application entry point
+├── 🎨 styles.py                                # Centralized UI styling and themes
+├── 🤖 chat_service.py                          # Gemini AI chatbot service
+├── 📝 resume_parser.py                         # Resume parsing & NLP analysis
+├── ⚙️ config.py                                # Configuration management
+├── 🛠️ utils.py                                 # Utility functions
+├── 💾 database.py                              # Neon PostgreSQL database operations
+├── 🌐 api_services.py                          # External API integrations (Jooble)
+├── 🔍 job_scrapers.py                          # Job scraping (Internshala)
+├── ⚠️ error_handler.py                         # Error handling & logging
+├── 📚 Courses.py                               # Course recommendation engine
 │
-├── 🤖 resume_classifier_v3_skills_mlp.pkl # Upgraded ML model (TF-IDF + MLP, 10.1 MB)
-├── ⚙️ soft_skill_role_trainer.py         # Local model training script
-├── 📊 UpdatedResumeDataSet.csv            # Training dataset (166 deduplicated unique samples)
-├── 📓 ResumeClassification_Model.ipynb    # Exploration model notebook
+├── 🤖 resume_classifier_v3_skills_mlp.pkl      # Upgraded ML model (TF-IDF + MLP, 10.1 MB)
+├── ⚙️ soft_skill_role_trainer.py               # Local model training script
+├── 📊 UpdatedResumeDataSet.csv                 # Training dataset (166 deduplicated unique samples)
+├── 📓 ResumeClassification_Model.ipynb         # Exploration model notebook
 │
-├── 📋 requirements.txt                 # Python dependencies
-├── 📖 README.md                        # Project documentation
-├── 📜 LICENSE                          # MIT License
-├── 🔒 PRIVACY.md                       # Privacy policy
-├── 🔐 .env.example                     # Environment variables template
-├── 🚫 .gitignore                       # Git ignore rules
-│
-├── 📁 .streamlit/                      # Streamlit configuration
-│   ├── config.toml                     # App configuration
-│   └── secrets.toml.example            # Secrets template
-│
-├── 🔤 nevera_font/                     # Custom Nevera font files
+├── 📋 requirements.txt                         # Python dependencies
+├── 📖 README.md                                # Project documentation
+├── 📜 LICENSE                                  # MIT License
+├── 🔒 PRIVACY.md                               # Privacy policy
+├── 🔐 .env.example                             # Environment variables template
+├── 🚫 .gitignore                               # Git ignore rules
+│        
+├── 📁 .streamlit/                              # Streamlit configuration
+│   ├── config.toml                             # App configuration
+│   └── secrets.toml.example                    # Secrets template
+│        
+├── 🔤 nevera_font/                             # Custom Nevera font files
 │   ├── Nevera-Bold.ttf
 │   ├── Nevera-Regular.ttf
 │   └── Nevera-Light.ttf
 │
-├── 📂 Uploaded_Resumes/                # User uploaded resume storage
-│   └── .gitkeep                        # Preserve directory in Git
-│
-└── 📁 screenshots/                     # Application screenshots for README
+├── 📂 Uploaded_Resumes/                        # User uploaded resume storage
+│   └── .gitkeep                                # Preserve directory in Git
+│        
+└── 📁 screenshots/                             # Application screenshots for README
 ```
-
 ---
 
 ## 🧪 Development & Testing
