@@ -190,8 +190,8 @@ CREATE TABLE IF NOT EXISTS user_data (
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/ShubhamSnSharma/internhunt2.git
-cd internhunt2
+git clone https://github.com/ShubhamSnSharma/InternHunt.git
+cd InternHunt
 ```
 
 2. **Create virtual environment**
@@ -238,7 +238,7 @@ The app will open in your browser at `http://localhost:8501` 🎉
 ## 📁 Project Structure
 
 ```
-internhunt2/
+InternHunt/
 ├── 📄 App.py                           # Main Streamlit application entry point
 ├── 🎨 styles.py                        # Centralized UI styling and themes
 ├── 🤖 chat_service.py                  # Gemini AI chatbot service
@@ -325,7 +325,7 @@ We welcome contributions! Here's how to get started:
 
 **Shubham Sharma**
 - GitHub: [@ShubhamSnSharma](https://github.com/ShubhamSnSharma)
-- Project: [internhunt2](https://github.com/ShubhamSnSharma/internhunt2)
+- Project: [InternHunt](https://github.com/ShubhamSnSharma/InternHunt)
 
 ---
 
