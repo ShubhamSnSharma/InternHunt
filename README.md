@@ -43,6 +43,10 @@
 ![Landing Page](./screenshots/landing-page.png)
 *Beautiful Figma-designed landing page hosted on Vercel*
 
+### 🚀 Main Application Portal (Streamlit)
+![Main App Landing Page](./screenshots/landing-page-main.png)
+*Core interactive app landing page on Streamlit Cloud*
+
 ### 💼 Resume Analysis
 ![Resume Upload](./screenshots/resume-upload.png)
 *Smart resume parsing and classification*
