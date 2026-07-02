@@ -16,20 +16,7 @@
 
 ---
 
-### 🌐 **Live Demo**
-
-<div align="center">
-
-[![Landing Page](https://img.shields.io/badge/🌟_Landing_Page-Visit_Now-6366F1?style=for-the-badge&labelColor=1e293b)](https://internhuntt.vercel.app)
-[![Web App](https://img.shields.io/badge/🚀_Web_App-Try_Live-FF4B4B?style=for-the-badge&labelColor=1e293b)](https://internhunt.streamlit.app)
-
 **👉 Start at the [Landing Page](https://internhuntt.vercel.app) → Click "Upload Resume" → Experience the [Full App](https://internhunt.streamlit.app)!**
-
-</div>
-
----
-
-[Features](#-features) • [Workflow](#-system-architecture--workflow) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Machine Learning](#-machine-learning-model) • [Scrapers](#-job-scrapers--recommendations) • [Database](#-database--persistence)
 
 </div>
 
@@ -70,37 +57,18 @@
 
 ---
 
-## ✨ Features
+## 🎯 Key Features
 
-### 📋 **Complete Resume Analysis Pipeline**
+### 📋 Complete Resume Analysis Pipeline
 
-#### **1. Resume Upload & Parsing**
-- 📄 **Multi-format Support** - Upload PDF or DOCX resumes (50MB limit)
-- 🎯 **Advanced Text Extraction** - Utilizes `pypdf` and `python-docx` for reliable raw text decoding
-- 📊 **Contact Detection** - Regex filters identify Name, Email, Phone, GitHub, and LinkedIn URLs
-
-#### **2. Skill Detection & Normalization**
-- 🔍 **NLP-Powered Detection** - Identifies 100+ technical skills via a dictionary-based `spaCy` matcher
-- 🏷️ **Fuzzy Matching** - Employs `fuzzywuzzy` to recognize variations and typos (e.g. `k8s` mapped to `Kubernetes`)
-- 🎨 **Domain-based Skill Badges** - Groups parsed skills visually by category (Languages, Databases, DevOps, mobile, etc.)
-
-#### **3. AI-Detected Career Profile**
-- 🧠 **ML Classification** - Neural network (MLPClassifier) role prediction trained on a deduplicated unique dataset
-- 🎯 **Top 3 Role Recommendations** - Displays alternative career matches with corresponding probability scores
-- 📊 **Probability Calibration** - Sharp softmax outputs map directly to confidence ratings (High, Medium, Low)
-
-#### **4. ATS Performance Analytics**
-- 📈 **ATS Score Dial** - Tracks resume compatibility with modern Applicant Tracking Systems
-- 🎯 **Completeness Checks** - Evaluates the presence of 5 core sections (Contact, Skills, Experience, Education, Projects)
-- 💡 **Actionable Optimization Tips** - Tailored suggestions to improve formatting and add missing information
-
-#### **5. Double-Source Recommendations**
-- 🎓 **Tailored Courses** - Pulls matched learning path suggestions from a mapped course repository (`Courses.py`)
-- 🌐 **Live Internships** - Combines multiple APIs and web scrapers to gather matched real-time listings
-
-#### **6. Context-Aware AI Chatbot Assistant**
-- 💬 **Gemini AI Coaching** - Conversational career chat powered by Google Gemini (`gemini-1.5-flash`)
-- 📚 **Resume-Aware System Instructions** - Chatbot reads the parsed resume details, scoring metrics, and missing keywords to suggest customized advice
+| Stage | What Happens |
+|-------|--------------|
+| **1. Upload & Parse** | PDF/DOCX support (50MB limit), text extraction via `pypdf` + `python-docx` |
+| **2. Skill Detection** | 100+ technical skills via spaCy NLP + fuzzy matching (e.g., `k8s` → `Kubernetes`) |
+| **3. Role Prediction** | MLP Neural Network (TF-IDF → 128/64 hidden layers) → Top 3 roles with confidence |
+| **4. ATS Scoring** | 5-factor breakdown: Content (50%), Formatting (15%), Keywords (20%), Experience (10%), Readability (5%) |
+| **5. Recommendations** | Live internships (Jooble, Internshala, Remotive, GitHub) + curated courses |
+| **6. AI Assistant** | Gemini 1.5 Flash with full resume context for personalized career coaching |
 
 ---
 
@@ -168,14 +136,16 @@ Pipeline([
 
 ---
 
-## 🌐 Job Scrapers & Recommendations
+## 🌐 Job Sources & Recommendations
 
-The application does not rely on a single source but combines APIs and custom HTML scrapers:
+InternHunt combines **APIs + custom scrapers** for comprehensive coverage:
 
-* **Internshala Scraper:** A Python scraper using `requests` and `BeautifulSoup4` (`lxml` parser) to scrape India-focused listings. It queries Internshala’s keyword URL structures (e.g. `https://internshala.com/internships/keywords-{query}`) and parses details like stipends, durations, and application links directly from individual internship cards.
-* **Remotive API:** Pulls remote developer opportunities from Remotive's free public endpoint based on the top 5 parsed skills.
-* **Jooble API:** Queries the global Jooble job search engine using HTTP POST requests containing skill keywords and locations. (Requires `JOOBLE_API_KEY`).
-* **GitHub Repositories Search:** Scrapes GitHub search listings looking for repositories tagged with `hiring` or `internship` matching the candidate's core skills.
+| Source | Type | Coverage | Key Details |
+|--------|------|----------|-------------|
+| **Internshala** | HTML Scraper | India-focused internships | Keyword-based URLs, parses stipend, duration, apply links |
+| **Remotive** | REST API | Global remote dev jobs | Free public endpoint, filtered by top 5 skills |
+| **Jooble** | REST API | Global job search | Requires `JOOBLE_API_KEY`, POST with keywords + location |
+| **GitHub** | HTML Scraper | Hiring/Internship repos | Searches repos with `topic:hiring` or `topic:internship` |
 
 ---
 
@@ -183,8 +153,12 @@ The application does not rely on a single source but combines APIs and custom HT
 
 InternHunt supports dual persistence schemes for local development and cloud production:
 
-* **Neon serverless PostgreSQL:** (Preferred in production). Connects using `psycopg2` via a connection string environment variable (`DATABASE_URL`).
-* **Local MySQL:** (Fallback for local development). Connects using `pymysql` based on local configuration credentials.
+Dual persistence for local dev + cloud production:
+
+| Database | Use Case | Driver |
+|----------|----------|--------|
+| **Neon PostgreSQL** | Production (Streamlit Cloud) | `psycopg2` via `DATABASE_URL` |
+| **MySQL** | Local development fallback | `pymysql` via env vars |
 
 ### **Logged User Registry Schema:**
 ```sql
@@ -306,14 +280,44 @@ internhunt2/
 
 ---
 
+## 🧪 Development & Testing
+
+### Run Model Training (Optional)
+```bash
+# Retrain the classifier with new data
+python soft_skill_role_trainer.py
+```
+
+### Check Gemini Connection
+```bash
+python -c "from chat_service import check_gemini_health; print(check_gemini_health())"
+```
+
+### Linting & Formatting
+```bash
+# If you have ruff/black configured
+ruff check .
+black .
+```
+
+---
+
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these guidelines:
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to the branch** (`git push origin feature/AmazingFeature`)
+We welcome contributions! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create a feature branch** — `git checkout -b feature/amazing-feature`
+3. **Commit changes** — `git commit -m 'Add amazing feature'`
+4. **Push to branch** — `git push origin feature/amazing-feature`
 5. **Open a Pull Request**
+
+### Ideas for Contribution Ideas:
+- Add new job sources (LinkedIn, Indeed, Wellfound)
+- Improve resume parsing for DOCX/images
+- Add more ML roles or fine-tune the classifier
+- Enhance UI/UX with new visualizations
+- Write tests for core modules
 
 ---
 
@@ -321,11 +325,27 @@ Contributions are welcome! Please follow these guidelines:
 
 **Shubham Sharma**
 - GitHub: [@ShubhamSnSharma](https://github.com/ShubhamSnSharma)
+- Project: [internhunt2](https://github.com/ShubhamSnSharma/internhunt2)
 
 ---
 
 ## 🙏 Acknowledgments
-- [Google Gemini](https://ai.google.dev/) for conversational AI capabilities.
-- [Streamlit](https://streamlit.io/) for the clean web framework.
-- [Internshala](https://internshala.com/) for internship listings.
-- All open-source contributors.
+
+- [Google Gemini](https://ai.google.dev/) — Conversational AI capabilities
+- [Streamlit](https://streamlit.io/) — Beautiful web framework for data apps
+- [Internshala](https://internshala.com/) — Internship listings for Indian students
+- [Remotive](https://remotive.com/) — Free remote job API
+- [Jooble](https://jooble.org/) — Global job search API
+- [scikit-learn](https://scikit-learn.org/) — Machine learning toolkit
+- [spaCy](https://spacy.io/) — Industrial-strength NLP
+- All open-source contributors ❤️
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if you found it helpful!**
+
+Made with ❤️ by students, for students
+
+</div>
