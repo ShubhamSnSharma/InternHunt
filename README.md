@@ -56,8 +56,9 @@
 *Tailored learning paths based on your profile*
 
 ### 🔍 Job Search
-![Job Search](./screenshots/job-search.png)
-*Real-time internship opportunities from multiple sources*
+![Job Search 1](./screenshots/job-search1.png)
+![Job Search 2](./screenshots/job-search2.png)
+*Real-time internship opportunities matching your skills (scraped from multiple platforms like Internshala, Remotive, and Jooble)*
 
 ### 🔐 Admin Dashboard
 ![Admin Dashboard](./screenshots/admin-dashboard.png)
@@ -103,27 +104,7 @@
 
 InternHunt processes resume uploads, evaluates scoring, logs user details to the database, queries external scrapers, and initializes the chatbot context in a highly structured pipeline:
 
-```mermaid
-graph TD
-    A["User Uploads PDF/DOCX Resume"] --> B["Step 1: Text Extraction (pypdf/python-docx)"]
-    B --> C["Step 2: Text Preprocessing & Cleaning (regex)"]
-    
-    C --> D1["Step 3a: Contact Info Parsing (Emails, Phones, Social URLs)"]
-    C --> D2["Step 3b: Technical Skills Matching (spaCy PhraseMatcher)"]
-    C --> D3["Step 3c: Category Prediction (TF-IDF + MLP Classifier)"]
-    
-    D3 --> E1["Top-3 Job Categories & Softmax Probabilities"]
-    D2 & D3 --> E2["ATS Scoring & Missing Keywords Identification"]
-    
-    E1 & E2 & D1 & D2 --> F["Step 4: Save Registry Entry to Neon PostgreSQL"]
-    
-    E1 & E2 --> G1["Recommend Curated Courses (Courses.py)"]
-    D2 & E1 --> G2["Recommend Live Internships (Scrapers & APIs)"]
-    
-    E1 & E2 & D2 --> H["Step 5: Initialize Gemini AI Assistant (google-genai)"]
-    H --> I["Candidate Asks Career Questions in Sidebar Chat"]
-    I --> J["Assistant Responds with Resume-Aware Context (gemini-1.5-flash)"]
-```
+![System Workflow Diagram](./screenshots/workflow-diagram.png)
 
 ### **Workflow Breakdown:**
 1. **Extraction & Preprocessing:** The uploaded document is parsed, stripped of raw formatting, and cleaned of non-ASCII symbols and excessive spacing.

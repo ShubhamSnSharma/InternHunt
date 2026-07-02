@@ -255,8 +255,8 @@ def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = 
                 # Check for max tokens truncation (reason contains 'MAX_TOKENS' or is 2)
                 elif 'MAX_TOKENS' in reason_str or candidate.finish_reason == 2:
                     partial_text = ""
-                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                         text_parts = [part.text for part in candidate.content.parts if hasattr(part, 'text')]
+                    if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts') and candidate.content.parts:
+                         text_parts = [part.text or "" for part in (candidate.content.parts or []) if hasattr(part, 'text')]
                          partial_text = ''.join(text_parts)
                     return _format_conversational_response(partial_text + "\n\n[Response truncated due to length]")
                 # If reason is anything other than STOP, UNSPECIFIED, 1, or 0, it is an error
