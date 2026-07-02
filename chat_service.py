@@ -243,19 +243,30 @@ def chat_gemini(messages: List[Dict[str, str]], resume_context: Optional[str] = 
         # Check finish reason
         if hasattr(response, 'candidates') and response.candidates:
             candidate = response.candidates[0]
-            if hasattr(candidate, 'finish_reason'):
-                # finish_reason: 1=STOP (normal), 2=MAX_TOKENS, 3=SAFETY, 4=RECITATION, 5=OTHER
-                if candidate.finish_reason == 3:  # SAFETY
+            if hasattr(candidate, 'finish_reason') and candidate.finish_reason:
+                # Support both legacy integer enums and new google-genai string enums
+                reason_str = str(candidate.finish_reason)
+                if hasattr(candidate.finish_reason, 'name'):
+                    reason_str = candidate.finish_reason.name
+                
+                # Check for safety blocks (reason contains 'SAFETY' or is 3)
+                if 'SAFETY' in reason_str or candidate.finish_reason == 3:
                     return "⚠️ The response was blocked by safety filters. Please rephrase your question."
-                elif candidate.finish_reason == 2:  # MAX_TOKENS
-                    # Instead of erroring, return what we have so far
+                # Check for max tokens truncation (reason contains 'MAX_TOKENS' or is 2)
+                elif 'MAX_TOKENS' in reason_str or candidate.finish_reason == 2:
                     partial_text = ""
                     if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
                          text_parts = [part.text for part in candidate.content.parts if hasattr(part, 'text')]
                          partial_text = ''.join(text_parts)
                     return _format_conversational_response(partial_text + "\n\n[Response truncated due to length]")
-                elif candidate.finish_reason not in [1, 0]:  # Not STOP or UNSPECIFIED
-                    return "⚠️ I encountered an issue generating the response. Please try again with a different question."
+                # If reason is anything other than STOP, UNSPECIFIED, 1, or 0, it is an error
+                else:
+                    is_ok = ('STOP' in reason_str or 
+                             'UNSPECIFIED' in reason_str or 
+                             reason_str in ['None', '', '0', '1'] or 
+                             candidate.finish_reason in [1, 0])
+                    if not is_ok:
+                        return "⚠️ I encountered an issue generating the response. Please try again with a different question."
         
         # Format the response
         if response and hasattr(response, 'text'):
