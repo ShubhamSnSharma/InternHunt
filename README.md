@@ -2,21 +2,19 @@
 
 # InternHunt
 
-### AI-Powered Internship Matching Platform
+**AI-Powered Resume Analysis & Internship Matching Platform**
 
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
+[![Landing Page](https://img.shields.io/badge/Landing%20Page-Live%20on%20Vercel-000000?style=for-the-badge&logo=vercel)](https://internhuntt.vercel.app)
+[![Web App](https://img.shields.io/badge/Web%20App-Live%20on%20Streamlit-FF4B4B?style=for-the-badge&logo=streamlit)](https://internhunt.streamlit.app)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-[![Vercel](https://img.shields.io/badge/Landing-Live_on_Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://internhuntt.vercel.app)
-[![Streamlit Cloud](https://img.shields.io/badge/App-Live_on_Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://internhunt.streamlit.app)
-
-**Intelligent Internship Matching Using ML, APIs & Web Data**
+*Streamline your internship search using NLP, Machine Learning, and Real-Time Web Scraping.*
 
 ---
 
-**👉 Start at the [Landing Page](https://internhuntt.vercel.app) → Click "Upload Resume" → Experience the [Full App](https://internhunt.streamlit.app)!**
+**🔗 Quick Access**  
+[🌐 Landing Page](https://internhuntt.vercel.app) • [🚀 Streamlit App](https://internhunt.streamlit.app) • [📖 Documentation](https://github.com/ShubhamSnSharma/InternHunt#readme)
 
 </div>
 
