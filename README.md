@@ -12,7 +12,7 @@
 
 ---
 
-**👉 Quick Links:**  
+**Quick Links:**  
 [Landing Page (Vercel)](https://internhuntt.vercel.app) &nbsp;•&nbsp; [Streamlit Web App](https://internhunt.streamlit.app)
 
 </div>
