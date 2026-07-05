@@ -35,10 +35,6 @@
 ![Resume Upload](./screenshots/resume-upload.png)
 *Redesigned SaaS-style upload interface card*
 
-### 🔄 Resume Uploaded State
-![Resume Uploaded State](./screenshots/resume-uploaded-state.png)
-*Smooth transition indicating successful upload and analysis readiness*
-
 ### 🔐 Admin Login Portal
 ![Admin Login](./screenshots/admin-login.png)
 *Two-column professional portal inspired by Supabase and Clerk*
