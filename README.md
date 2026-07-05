@@ -257,6 +257,9 @@ GEMINI_MODEL=gemini-1.5-flash
 
 # Neon Database (PostgreSQL)
 DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+
+# Admin Portal Password
+ADMIN_PASSWORD=your_admin_password_here
 ```
 
 6. **Run the application**
