@@ -4751,49 +4751,33 @@ def main():
                             gap: 16px;
                             margin-bottom: 36px;
                         ">
-                            <div style="
-                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
-                                border: 1px solid rgba(99,102,241,0.2);
-                                border-radius: 14px; padding: 22px 18px;
-                            ">
-                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Total Resumes</div>
-                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{total_users}</div>
-                                <div style="font-size:12px; color:#10B981; margin-top:8px; font-weight:600;">↑ All records</div>
+                            <div class="saas-kpi-card">
+                                <div style="font-size:10px; font-weight:700; color:#A78BFA; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Total Resumes</div>
+                                <div style="font-size:32px; font-weight:800; color:#F8FAFC; line-height:1;">{total_users}</div>
+                                <div style="font-size:11px; color:#64748B; margin-top:8px; font-weight:500;">All uploaded candidates</div>
                             </div>
-                            <div style="
-                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
-                                border: 1px solid rgba(99,102,241,0.2);
-                                border-radius: 14px; padding: 22px 18px;
-                            ">
-                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg ATS Score</div>
-                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{avg_score:.1f}<span style='font-size:18px; color:#64748B;'>%</span></div>
-                                <div style="font-size:12px; color:#A78BFA; margin-top:8px; font-weight:600;">Platform average</div>
+                            <div class="saas-kpi-card">
+                                <div style="font-size:10px; font-weight:700; color:#A78BFA; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg ATS Score</div>
+                                <div style="font-size:32px; font-weight:800; color:#F8FAFC; line-height:1;">{avg_score:.1f}<span style='font-size:18px; color:#64748B;'>%</span></div>
+                                <div style="font-size:11px; color:#64748B; margin-top:8px; font-weight:500;">Platform average</div>
                             </div>
-                            <div style="
-                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
-                                border: 1px solid rgba(99,102,241,0.2);
-                                border-radius: 14px; padding: 22px 18px;
-                            ">
-                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Top Field</div>
-                                <div style="font-size:19px; font-weight:800; color:#F1F5F9; line-height:1; margin-top:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{top_role_str}</div>
-                                <div style="font-size:12px; color:#3B82F6; margin-top:8px; font-weight:600;">Most common</div>
+                            <div class="saas-kpi-card">
+                                <div style="font-size:10px; font-weight:700; color:#A78BFA; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Top Field</div>
+                                <div style="font-size:18px; font-weight:800; color:#F8FAFC; line-height:1.2; margin-top:4px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{top_role_str}</div>
+                                <div style="font-size:11px; color:#64748B; margin-top:8px; font-weight:500;">Across database</div>
                             </div>
-                            <div style="
-                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
-                                border: 1px solid rgba(99,102,241,0.2);
-                                border-radius: 14px; padding: 22px 18px;
-                            ">
-                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg Pages</div>
-                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{avg_pages:.1f}</div>
-                                <div style="font-size:12px; color:#94A3B8; margin-top:8px; font-weight:600;">Per resume</div>
+                            <div class="saas-kpi-card">
+                                <div style="font-size:10px; font-weight:700; color:#A78BFA; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg Pages</div>
+                                <div style="font-size:32px; font-weight:800; color:#F8FAFC; line-height:1;">{avg_pages:.1f}</div>
+                                <div style="font-size:11px; color:#64748B; margin-top:8px; font-weight:500;">Per resume</div>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
 
                         # ── Section divider ───────────────────────────────────
                         st.markdown("""
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
-                            <div style="font-size:14px; font-weight:700; color:#CBD5E1;">Distribution Breakdown</div>
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+                            <div style="font-size:15px; font-weight:700; color:#F1F5F9; letter-spacing:-0.2px;">Distribution Analytics</div>
                             <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -4802,20 +4786,27 @@ def main():
 
                         with chart_col1:
                             st.markdown("""
-                            <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
-                                        border-radius:12px; padding:16px 18px; margin-bottom:4px;">
-                                <div style="font-size:13px; font-weight:600; color:#CBD5E1;">Career Field Distribution</div>
+                            <div style="background:#090D16; border:1px solid rgba(255,255,255,0.06);
+                                        border-radius:14px; padding:16px 18px; margin-bottom:4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                                <div style="font-size:13px; font-weight:700; color:#CBD5E1;">Career Field Distribution</div>
                                 <div style="font-size:11px; color:#475569; margin-top:2px;">Predicted field across all resumes</div>
                             </div>
                             """, unsafe_allow_html=True)
                             field_counts = df['Predicted Field'].value_counts().reset_index()
                             field_counts.columns = ['Field', 'Count']
+                            
                             fig_fields = px.pie(
                                 field_counts,
                                 names="Field",
                                 values="Count",
-                                hole=0.4,
-                                color_discrete_sequence=px.colors.sequential.RdPu_r,
+                                hole=0.7,
+                                color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC', '#E9D5FF', '#F3E8FF']
+                            )
+                            fig_fields.add_annotation(
+                                text=f"<span style='font-size:26px; font-weight:800; color:#F8FAFC;'>{total_users}</span><br><span style='font-size:9px; font-weight:600; color:#64748B; text-transform:uppercase; letter-spacing:0.5px;'>Resumes</span>",
+                                x=0.5, y=0.5,
+                                showarrow=False,
+                                font=dict(family="Inter, sans-serif")
                             )
                             fig_fields.update_layout(
                                 paper_bgcolor="rgba(0,0,0,0)",
@@ -4823,11 +4814,11 @@ def main():
                                 font=dict(family="Inter, sans-serif", color="#CBD5E1"),
                                 showlegend=True,
                                 legend=dict(
-                                    orientation="h",
-                                    yanchor="top",
-                                    y=-0.15,
-                                    xanchor="center",
-                                    x=0.5,
+                                    orientation="v",
+                                    yanchor="middle",
+                                    y=0.5,
+                                    xanchor="left",
+                                    x=0.95,
                                     font=dict(size=10)
                                 ),
                                 margin=dict(t=10, b=10, l=10, r=10),
@@ -4835,53 +4826,71 @@ def main():
                             )
                             fig_fields.update_traces(
                                 textposition='inside',
-                                textinfo='percent',
-                                insidetextorientation='horizontal'
+                                textinfo='none',
+                                hoverinfo='label+value',
+                                hoverlabel=dict(bgcolor="#0F172A", font_size=11, font_family="Inter, sans-serif")
                             )
-                            st.plotly_chart(fig_fields, width="stretch", config={'displayModeBar': False})
+                            st.plotly_chart(fig_fields, use_container_width=True, config={'displayModeBar': False})
 
                         with chart_col2:
                             st.markdown("""
-                            <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
-                                        border-radius:12px; padding:16px 18px; margin-bottom:4px;">
-                                <div style="font-size:13px; font-weight:600; color:#CBD5E1;">Experience Level Breakdown</div>
-                                <div style="font-size:11px; color:#475569; margin-top:2px;">Candidate proficiency distribution</div>
+                            <div style="background:#090D16; border:1px solid rgba(255,255,255,0.06);
+                                        border-radius:14px; padding:16px 18px; margin-bottom:4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                                <div style="font-size:13px; font-weight:700; color:#CBD5E1;">Top Technical Skills</div>
+                                <div style="font-size:11px; color:#475569; margin-top:2px;">Most common skills detected across uploaded resumes</div>
                             </div>
                             """, unsafe_allow_html=True)
-                            level_counts = df['User Level'].value_counts().reset_index()
-                            level_counts.columns = ['Level', 'Count']
-                            fig_levels = px.bar(
-                                level_counts,
-                                x="Count",
-                                y="Level",
-                                orientation="h",
-                                color="Level",
-                                color_discrete_sequence=px.colors.sequential.Purples_r,
-                            )
-                            fig_levels.update_layout(
-                                paper_bgcolor="rgba(0,0,0,0)",
-                                plot_bgcolor="rgba(0,0,0,0)",
-                                font=dict(family="Inter, sans-serif", color="#CBD5E1"),
-                                showlegend=False,
-                                xaxis=dict(
-                                    showgrid=True,
-                                    gridcolor="rgba(255,255,255,0.05)",
-                                    tickformat=",d"
-                                ),
-                                yaxis=dict(
-                                    showgrid=False,
-                                    categoryorder="total ascending"
-                                ),
-                                margin=dict(t=10, b=10, l=10, r=10),
-                                height=320,
-                            )
-                            st.plotly_chart(fig_levels, width="stretch", config={'displayModeBar': False})
+                            
+                            # Parse skills dynamically from the dataframe
+                            all_skills = []
+                            for skills_str in df['Skills'].dropna():
+                                if skills_str:
+                                    all_skills.extend([s.strip() for s in str(skills_str).split(',') if s.strip()])
+                            
+                            if all_skills:
+                                skills_series = pd.Series(all_skills).value_counts().head(10).reset_index()
+                                skills_series.columns = ['Skill', 'Frequency']
+                                
+                                fig_skills = px.bar(
+                                    skills_series,
+                                    x="Frequency",
+                                    y="Skill",
+                                    orientation="h",
+                                    color="Skill",
+                                    color_discrete_sequence=px.colors.sequential.Purples_r,
+                                )
+                                fig_skills.update_traces(
+                                    texttemplate='%{x}',
+                                    textposition='outside',
+                                    marker=dict(line=dict(width=1, color="rgba(255,255,255,0.05)")),
+                                    hoverlabel=dict(bgcolor="#0F172A", font_size=11, font_family="Inter, sans-serif")
+                                )
+                                fig_skills.update_layout(
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    plot_bgcolor="rgba(0,0,0,0)",
+                                    font=dict(family="Inter, sans-serif", color="#CBD5E1"),
+                                    showlegend=False,
+                                    xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)", tickformat=",d"),
+                                    yaxis=dict(showgrid=False, categoryorder="total ascending"),
+                                    margin=dict(t=10, b=10, l=10, r=20),
+                                    height=320,
+                                )
+                                st.plotly_chart(fig_skills, use_container_width=True, config={'displayModeBar': False})
+                            else:
+                                st.markdown("""
+                                <div style="background:rgba(99,102,241,0.02); border:1px dashed rgba(99,102,241,0.15);
+                                            border-radius:12px; height:320px; display:flex; flex-direction:column;
+                                            align-items:center; justify-content:center; padding:20px;">
+                                    <div style="font-size:2rem; margin-bottom:8px;">📊</div>
+                                    <div style="font-size:13px; font-weight:600; color:#64748B;">No skills detected yet</div>
+                                </div>
+                                """, unsafe_allow_html=True)
 
                         # ── ATS Score Distribution ────────────────────────────
                         st.markdown("""
-                        <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
-                                    border-radius:12px; padding:16px 18px; margin:24px 0 4px;">
-                            <div style="font-size:13px; font-weight:600; color:#CBD5E1;">ATS Score Distribution</div>
+                        <div style="background:#090D16; border:1px solid rgba(255,255,255,0.06);
+                                    border-radius:14px; padding:16px 18px; margin:24px 0 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                            <div style="font-size:13px; font-weight:700; color:#CBD5E1;">Score Insights</div>
                             <div style="font-size:11px; color:#475569; margin-top:2px;">Candidate quality bracket breakdown</div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -4897,22 +4906,22 @@ def main():
                         score_counts = df['Score_Range'].value_counts().reindex(bucket_order).fillna(0).reset_index()
                         score_counts.columns = ['Score Bracket', 'Candidates Count']
 
-                        fig_scores = px.area(
+                        fig_scores = px.bar(
                             score_counts,
                             x="Score Bracket",
                             y="Candidates Count",
-                            markers=True,
+                            color="Score Bracket",
+                            color_discrete_sequence=["#EF4444", "#F59E0B", "#10B981", "#8B5CF6"]
                         )
                         fig_scores.update_traces(
-                            line=dict(color="#6366F1", width=3),
-                            fillcolor="rgba(99, 102, 241, 0.15)",
-                            mode="lines+markers",
-                            marker=dict(size=8, color="#8B5CF6", line=dict(color="#FFFFFF", width=1.5))
+                            marker=dict(line=dict(width=1, color="rgba(255,255,255,0.05)")),
+                            hoverlabel=dict(bgcolor="#0F172A", font_size=11, font_family="Inter, sans-serif")
                         )
                         fig_scores.update_layout(
                             paper_bgcolor="rgba(0,0,0,0)",
                             plot_bgcolor="rgba(0,0,0,0)",
                             font=dict(family="Inter, sans-serif", color="#CBD5E1"),
+                            showlegend=False,
                             xaxis=dict(showgrid=False),
                             yaxis=dict(
                                 showgrid=True,
@@ -4922,13 +4931,13 @@ def main():
                             margin=dict(t=15, b=15, l=15, r=15),
                             height=260,
                         )
-                        st.plotly_chart(fig_scores, width="stretch", config={'displayModeBar': False})
+                        st.plotly_chart(fig_scores, use_container_width=True, config={'displayModeBar': False})
 
                     with tab_database:
                         # ── Filter bar ───────────────────────────────────────
                         st.markdown("""
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
-                            <div style="font-size:14px; font-weight:700; color:#CBD5E1;">Candidate Registry</div>
+                            <div style="font-size:15px; font-weight:700; color:#F1F5F9; letter-spacing:-0.2px;">Candidate Registry</div>
                             <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -4965,13 +4974,136 @@ def main():
                         display_df = filtered_df.drop(columns=['Score_num', 'Pages_num', 'Score_Range'], errors='ignore')
 
                         st.markdown(f"""
-                        <div style="font-size:12px; color:#475569; font-weight:600; margin:12px 0 8px;">
+                        <div style="font-size:12px; color:#64748B; font-weight:600; margin:12px 0 12px;">
                             {len(display_df)} candidate{'s' if len(display_df) != 1 else ''} match your filters
                         </div>
                         """, unsafe_allow_html=True)
-                        st.dataframe(display_df, width="stretch")
+                        
+                        # --- Custom HTML Table Registry & Pagination ---
+                        if not display_df.empty:
+                            RECORDS_PER_PAGE = 10
+                            if 'admin_page_num' not in st.session_state:
+                                st.session_state.admin_page_num = 1
+                                
+                            total_pages = max(1, (len(display_df) + RECORDS_PER_PAGE - 1) // RECORDS_PER_PAGE)
+                            if st.session_state.admin_page_num > total_pages:
+                                st.session_state.admin_page_num = total_pages
+                            if st.session_state.admin_page_num < 1:
+                                st.session_state.admin_page_num = 1
+                                
+                            start_idx = (st.session_state.admin_page_num - 1) * RECORDS_PER_PAGE
+                            end_idx = start_idx + RECORDS_PER_PAGE
+                            paginated_df = display_df.iloc[start_idx:end_idx]
+                            
+                            def get_field_badge(field):
+                                if not field or pd.isna(field) or str(field).lower() == 'nan':
+                                    return '<span class="category-badge">General</span>'
+                                return f'<span class="category-badge">{field}</span>'
 
-                        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+                            def get_level_badge(level):
+                                if not level or pd.isna(level) or str(level).lower() == 'nan':
+                                    return '<span class="status-badge status-entry">Entry / Student</span>'
+                                lvl_str = str(level).strip()
+                                if "Senior" in lvl_str:
+                                    return f'<span class="status-badge status-senior">{lvl_str}</span>'
+                                elif "Mid" in lvl_str:
+                                    return f'<span class="status-badge status-mid">{lvl_str}</span>'
+                                else:
+                                    return f'<span class="status-badge status-entry">{lvl_str}</span>'
+
+                            def get_skills_pills(skills_str):
+                                if not skills_str or pd.isna(skills_str) or str(skills_str).lower() == 'nan':
+                                    return '<div class="skills-wrap"></div>'
+                                skills = [s.strip() for s in str(skills_str).split(",") if s.strip()]
+                                pills = [f'<span class="skill-pill">{s}</span>' for s in skills[:8]]
+                                if len(skills) > 8:
+                                    pills.append(f'<span class="skill-pill" style="opacity: 0.75; border-style: dashed;">+{len(skills) - 8} more</span>')
+                                return f'<div class="skills-wrap">{" ".join(pills)}</div>'
+
+                            def get_score_progress(score_str):
+                                try:
+                                    score_val = int(float(score_str))
+                                except Exception:
+                                    score_val = 0
+                                return f"""
+                                <div class="progress-container">
+                                    <div class="progress-bar-wrap">
+                                        <div class="progress-bar-fill" style="width: {score_val}%;"></div>
+                                    </div>
+                                    <span class="progress-text">{score_val}%</span>
+                                </div>
+                                """
+
+                            table_rows = []
+                            for _, row in paginated_df.iterrows():
+                                name = str(row['Name']) if pd.notna(row['Name']) else "Unknown"
+                                email = str(row['Email']) if pd.notna(row['Email']) else ""
+                                field_badge = get_field_badge(row['Predicted Field'])
+                                level_badge = get_level_badge(row['User Level'])
+                                skills_pills = get_skills_pills(row['Skills'])
+                                score_progress = get_score_progress(row['Resume Score'])
+                                timestamp = str(row['Timestamp']) if pd.notna(row['Timestamp']) else ""
+                                
+                                table_rows.append(f"""
+                                <tr>
+                                    <td>
+                                        <div class="candidate-name">{name}</div>
+                                        <div class="candidate-email">{email}</div>
+                                    </td>
+                                    <td>{score_progress}</td>
+                                    <td>{level_badge}</td>
+                                    <td>{field_badge}</td>
+                                    <td>{skills_pills}</td>
+                                    <td><span class="timestamp-text">{timestamp}</span></td>
+                                </tr>
+                                """)
+
+                            table_html = f"""
+                            <div class="table-container">
+                                <table class="saas-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Candidate</th>
+                                            <th>ATS Score</th>
+                                            <th>User Level</th>
+                                            <th>Predicted Field</th>
+                                            <th>Extracted Skills</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {"".join(table_rows)}
+                                    </tbody>
+                                </table>
+                            </div>
+                            """
+                            st.markdown(table_html, unsafe_allow_html=True)
+                            
+                            # Render custom pagination wrapper
+                            st.markdown("<div class='pagination-wrapper'>", unsafe_allow_html=True)
+                            pg_col1, pg_col2, pg_col3, pg_col4, pg_col5 = st.columns([3, 1, 1, 1, 3])
+                            with pg_col2:
+                                if st.button("Previous", disabled=(st.session_state.admin_page_num == 1), key="btn_prev_page"):
+                                    st.session_state.admin_page_num -= 1
+                                    st.rerun()
+                            with pg_col3:
+                                st.markdown(f"<div style='text-align:center; padding-top:6px; font-size:13px; font-weight:600; color:#94A3B8;'>Page {st.session_state.admin_page_num} / {total_pages}</div>", unsafe_allow_html=True)
+                            with pg_col4:
+                                if st.button("Next", disabled=(st.session_state.admin_page_num == total_pages), key="btn_next_page"):
+                                    st.session_state.admin_page_num += 1
+                                    st.rerun()
+                            st.markdown("</div>", unsafe_allow_html=True)
+                        else:
+                            st.markdown("""
+                            <div style="background:rgba(239,68,68,0.03); border:1px dashed rgba(239,68,68,0.15);
+                                        border-radius:12px; padding:32px; text-align:center; margin-top:16px;">
+                                <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
+                                <div style="font-size:14px; font-weight:600; color:#94A3B8;">No candidates match filters</div>
+                                <div style="font-size:12px; color:#475569; margin-top:4px;">Adjust your sliders or fields to view registry logs.</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
                         download_csv_data = display_df.to_csv(index=False)
                         st.download_button(
                             label="📥 Export as CSV",

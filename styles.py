@@ -646,6 +646,238 @@ class StyleManager:
                 padding-right: 1rem;
             }}
         }}
+
+        /* ── SaaS Table & Candidate Registry Redesign ── */
+        .table-container {{
+            width: 100% !important;
+            overflow-x: auto !important;
+            max-height: 520px !important;
+            overflow-y: auto !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 14px !important;
+            background: rgba(15, 23, 42, 0.3) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: blur(8px) !important;
+            margin-bottom: 24px !important;
+        }}
+        
+        .saas-table {{
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 0.85rem !important;
+            color: #CBD5E1 !important;
+            text-align: left !important;
+        }}
+        
+        .saas-table th {{
+            position: sticky !important;
+            top: 0 !important;
+            background: #0B0F19 !important;
+            color: #94A3B8 !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 0.05em !important;
+            padding: 14px 18px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            z-index: 10 !important;
+        }}
+        
+        .saas-table td {{
+            padding: 12px 18px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+            vertical-align: middle !important;
+        }}
+        
+        .saas-table tr {{
+            background: transparent !important;
+            transition: background-color 0.15s ease !important;
+        }}
+        
+        .saas-table tr:hover {{
+            background: rgba(255, 255, 255, 0.025) !important;
+        }}
+        
+        /* Candidate Info Stack */
+        .candidate-name {{
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: #F8FAFC !important;
+            margin-bottom: 2px !important;
+        }}
+        
+        .candidate-email {{
+            font-size: 0.75rem !important;
+            color: #64748B !important;
+        }}
+        
+        /* Experience Status Badges */
+        .status-badge {{
+            display: inline-block !important;
+            padding: 4px 10px !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            border-radius: 20px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.02em !important;
+            line-height: 1 !important;
+        }}
+        
+        .status-entry {{
+            background: rgba(16, 185, 129, 0.08) !important;
+            color: #10B981 !important;
+            border: 1px solid rgba(16, 185, 129, 0.18) !important;
+        }}
+        
+        .status-mid {{
+            background: rgba(245, 158, 11, 0.08) !important;
+            color: #F59E0B !important;
+            border: 1px solid rgba(245, 158, 11, 0.18) !important;
+        }}
+        
+        .status-senior {{
+            background: rgba(239, 68, 68, 0.08) !important;
+            color: #EF4444 !important;
+            border: 1px solid rgba(239, 68, 68, 0.18) !important;
+        }}
+        
+        /* Category Badges */
+        .category-badge {{
+            display: inline-block !important;
+            padding: 4px 8px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            background: rgba(99, 102, 241, 0.08) !important;
+            color: #A5B4FC !important;
+            border: 1px solid rgba(99, 102, 241, 0.18) !important;
+        }}
+        
+        /* Skills Pills Wrapper & Pill */
+        .skills-wrap {{
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 5px !important;
+            max-width: 320px !important;
+        }}
+        
+        .skill-pill {{
+            font-size: 0.72rem !important;
+            font-weight: 500 !important;
+            color: #C084FC !important;
+            background: rgba(192, 132, 252, 0.04) !important;
+            border: 1px solid rgba(192, 132, 252, 0.18) !important;
+            padding: 2px 6px !important;
+            border-radius: 6px !important;
+            transition: all 0.15s ease !important;
+        }}
+        
+        .skill-pill:hover {{
+            background: rgba(192, 132, 252, 0.12) !important;
+            border-color: rgba(192, 132, 252, 0.4) !important;
+            color: #E9D5FF !important;
+        }}
+        
+        /* Table Progress Bar (ATS Score) */
+        .progress-container {{
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }}
+        
+        .progress-bar-wrap {{
+            width: 70px !important;
+            height: 6px !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
+        }}
+        
+        .progress-bar-fill {{
+            height: 100% !important;
+            border-radius: 4px !important;
+            background: linear-gradient(90deg, #A78BFA, #818CF8) !important;
+        }}
+        
+        .progress-text {{
+            font-size: 0.82rem !important;
+            font-weight: 700 !important;
+            color: #F8FAFC !important;
+        }}
+        
+        .timestamp-text {{
+            font-size: 0.75rem !important;
+            color: #64748B !important;
+        }}
+        
+        /* KPI Cards redesign overrides */
+        .saas-kpi-card {{
+            background: linear-gradient(135deg, rgba(20, 26, 53, 0.5) 0%, rgba(13, 17, 30, 0.55) 100%) !important;
+            border: 1px solid rgba(99, 102, 241, 0.15) !important;
+            border-radius: 16px !important;
+            padding: 22px 18px !important;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2) !important;
+        }}
+        .saas-kpi-card:hover {{
+            transform: translateY(-3px) !important;
+            border-color: rgba(99, 102, 241, 0.3) !important;
+            box-shadow: 0 12px 30px 0 rgba(99, 102, 241, 0.08), 0 8px 24px 0 rgba(0, 0, 0, 0.3) !important;
+        }}
+        
+        /* Custom Pagination styles block overrides */
+        .pagination-wrapper {{
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-top: 16px !important;
+            margin-bottom: 24px !important;
+            width: 100% !important;
+        }}
+        .pagination-wrapper div[data-testid="column"] button {{
+            border-radius: 8px !important;
+            background: rgba(99, 102, 241, 0.08) !important;
+            border: 1px solid rgba(99, 102, 241, 0.2) !important;
+            color: #E2E8F0 !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            padding: 5px 14px !important;
+            transition: all 0.2s ease !important;
+            width: 100% !important;
+        }}
+        .pagination-wrapper div[data-testid="column"] button:hover {{
+            background: rgba(99, 102, 241, 0.18) !important;
+            border-color: rgba(99, 102, 241, 0.45) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.15) !important;
+        }}
+        .pagination-wrapper div[data-testid="column"] button:disabled {{
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+            color: #475569 !important;
+            cursor: not-allowed !important;
+        }}
+
+        /* Styled Export CSV Button */
+        div[data-testid="stDownloadButton"] button {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%) !important;
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            border-radius: 10px !important;
+            color: #E9D5FF !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            padding: 8px 18px !important;
+            transition: all 0.25s ease !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }}
+        div[data-testid="stDownloadButton"] button:hover {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+            border-color: rgba(139, 92, 246, 0.6) !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.25) !important;
+        }}
         </style>
         """, unsafe_allow_html=True)
     
