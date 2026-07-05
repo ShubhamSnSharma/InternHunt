@@ -90,17 +90,18 @@ InternHunt features a premium visual upgrade away from standard Streamlit layout
 
 ## 🚀 UI Refresh
 
-The latest visual refresh updates key user flows:
+The latest visual refresh updates key user flows to deliver a premium enterprise-grade experience:
 
-- **Redesigned AI Resume Analysis Experience**:
-  - Replaced native Streamlit file uploader styles with a premium glass card dropzone.
-  - Interactive cloud upload icon featuring transition lifts and custom glowing frames.
-  - Excluded repetitive technical labels, keeping focus on clear, clean onboarding instructions.
-  - Smooth uploaded success state displaying checkmark states and progress loaders.
-- **Redesigned Admin Authentication Portal**:
-  - Two-column landing experience featuring a hero brand column detailing recruitment stats and checkmarks.
-  - High-fidelity right-column credentials card.
-  
+### 💼 Redesigned AI Resume Analysis Experience
+Replaced native Streamlit file uploader styles with a premium glass card dropzone. Features an interactive cloud upload icon, custom glowing frames, and a clean typography layout.
+
+![Resume Upload](./screenshots/resume-upload.png)
+
+### 🔐 Redesigned Admin Authentication Portal
+A complete authentication gateway redesign featuring a two-column layout: a left-side brand presentation hero with recruitment platform details and a right-side glassmorphism credentials card.
+
+![Admin Login](./screenshots/admin-login.png)
+
 > *"The latest interface redesign focuses on improving usability, reducing visual clutter, and creating a modern SaaS experience while preserving the application's original AI-powered resume analysis workflow."*
 
 ---
