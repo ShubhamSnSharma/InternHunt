@@ -4980,22 +4980,8 @@ def main():
                         </div>
                         """), unsafe_allow_html=True)
                         
-                        # --- Custom HTML Table Registry & Pagination ---
+                        # --- Custom HTML Table Registry (Single Scrollable List) ---
                         if not display_df.empty:
-                            RECORDS_PER_PAGE = 10
-                            if 'admin_page_num' not in st.session_state:
-                                st.session_state.admin_page_num = 1
-                                
-                            total_pages = max(1, (len(display_df) + RECORDS_PER_PAGE - 1) // RECORDS_PER_PAGE)
-                            if st.session_state.admin_page_num > total_pages:
-                                st.session_state.admin_page_num = total_pages
-                            if st.session_state.admin_page_num < 1:
-                                st.session_state.admin_page_num = 1
-                                
-                            start_idx = (st.session_state.admin_page_num - 1) * RECORDS_PER_PAGE
-                            end_idx = start_idx + RECORDS_PER_PAGE
-                            paginated_df = display_df.iloc[start_idx:end_idx]
-                            
                             def get_field_badge(field):
                                 if not field or pd.isna(field) or str(field).lower() == 'nan':
                                     return '<span class="category-badge">General</span>'
@@ -5035,8 +5021,35 @@ def main():
                                 </div>
                                 """
 
+                            def get_pages_text(pages_val):
+                                if not pages_val or pd.isna(pages_val) or str(pages_val).lower() == 'nan':
+                                    return '<span style="font-weight:600; color:#F8FAFC;">1</span>'
+                                try:
+                                    p_int = int(float(pages_val))
+                                    return f'<span style="font-weight:600; color:#F8FAFC;">{p_int}</span>'
+                                except Exception:
+                                    return f'<span style="font-weight:600; color:#F8FAFC;">{pages_val}</span>'
+
+                            def get_reco_skills_pills(reco_skills_str):
+                                if not reco_skills_str or pd.isna(reco_skills_str) or str(reco_skills_str).lower() == 'nan':
+                                    return '<div class="skills-wrap"></div>'
+                                skills = [s.strip() for s in str(reco_skills_str).split(",") if s.strip()]
+                                pills = [f'<span class="skill-pill" style="color: #10B981; background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.18);">{s}</span>' for s in skills[:5]]
+                                if len(skills) > 5:
+                                    pills.append(f'<span class="skill-pill" style="opacity: 0.75; border-style: dashed; color: #10B981; border-color: rgba(16, 185, 129, 0.18);">+{len(skills) - 5} more</span>')
+                                return f'<div class="skills-wrap">{" ".join(pills)}</div>'
+
+                            def get_courses_list(courses_str):
+                                if not courses_str or pd.isna(courses_str) or str(courses_str).lower() == 'nan':
+                                    return '<div class="skills-wrap"></div>'
+                                courses = [c.strip() for c in str(courses_str).split(",") if c.strip()]
+                                pills = [f'<span class="skill-pill" style="color: #60A5FA; background: rgba(96, 165, 250, 0.04); border-color: rgba(96, 165, 250, 0.18); font-size: 0.7rem; display: block; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{c}</span>' for c in courses[:3]]
+                                if len(courses) > 3:
+                                    pills.append(f'<span class="skill-pill" style="opacity: 0.75; border-style: dashed; color: #60A5FA; border-color: rgba(96, 165, 250, 0.18);">+{len(courses) - 3} more</span>')
+                                return f'<div class="skills-wrap" style="flex-direction: column; align-items: flex-start; gap: 4px;">{" ".join(pills)}</div>'
+
                             table_rows = []
-                            for _, row in paginated_df.iterrows():
+                            for _, row in display_df.iterrows():
                                 name = str(row['Name']) if pd.notna(row['Name']) else "Unknown"
                                 email = str(row['Email']) if pd.notna(row['Email']) else ""
                                 field_badge = get_field_badge(row['Predicted Field'])
@@ -5044,6 +5057,9 @@ def main():
                                 skills_pills = get_skills_pills(row['Skills'])
                                 score_progress = get_score_progress(row['Resume Score'])
                                 timestamp = str(row['Timestamp']) if pd.notna(row['Timestamp']) else ""
+                                pages_val = get_pages_text(row['Pages'])
+                                reco_skills = get_reco_skills_pills(row['Recommended Skills'])
+                                reco_courses = get_courses_list(row['Courses'])
                                 
                                 table_rows.append(f"""
                                 <tr>
@@ -5054,7 +5070,10 @@ def main():
                                     <td>{score_progress}</td>
                                     <td>{level_badge}</td>
                                     <td>{field_badge}</td>
+                                    <td>{pages_val}</td>
                                     <td>{skills_pills}</td>
+                                    <td>{reco_skills}</td>
+                                    <td>{reco_courses}</td>
                                     <td><span class="timestamp-text">{timestamp}</span></td>
                                 </tr>
                                 """)
@@ -5068,7 +5087,10 @@ def main():
                                             <th>ATS Score</th>
                                             <th>User Level</th>
                                             <th>Predicted Field</th>
+                                            <th>Pages</th>
                                             <th>Extracted Skills</th>
+                                            <th>Recommended Skills</th>
+                                            <th>Recommended Courses</th>
                                             <th>Timestamp</th>
                                         </tr>
                                     </thead>
@@ -5079,21 +5101,6 @@ def main():
                             </div>
                             """
                             st.markdown(clean_html(table_html), unsafe_allow_html=True)
-                            
-                            # Render custom pagination wrapper
-                            st.markdown(clean_html("<div class='pagination-wrapper'>"), unsafe_allow_html=True)
-                            pg_col1, pg_col2, pg_col3, pg_col4, pg_col5 = st.columns([3, 1, 1, 1, 3])
-                            with pg_col2:
-                                if st.button("Previous", disabled=(st.session_state.admin_page_num == 1), key="btn_prev_page"):
-                                    st.session_state.admin_page_num -= 1
-                                    st.rerun()
-                            with pg_col3:
-                                st.markdown(clean_html(f"<div style='text-align:center; padding-top:6px; font-size:13px; font-weight:600; color:#94A3B8;'>Page {st.session_state.admin_page_num} / {total_pages}</div>"), unsafe_allow_html=True)
-                            with pg_col4:
-                                if st.button("Next", disabled=(st.session_state.admin_page_num == total_pages), key="btn_next_page"):
-                                    st.session_state.admin_page_num += 1
-                                    st.rerun()
-                            st.markdown(clean_html("</div>"), unsafe_allow_html=True)
                         else:
                             st.markdown(clean_html("""
                             <div style="background:rgba(239,68,68,0.03); border:1px dashed rgba(239,68,68,0.15);
