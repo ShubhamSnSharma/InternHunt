@@ -598,6 +598,9 @@ def initialize_app():
     if "theme_mode" not in st.session_state:
         st.session_state.theme_mode = "light"
     
+    if "admin_authenticated" not in st.session_state:
+        st.session_state.admin_authenticated = False
+
     # Ensure NLTK data only once per session
     if not st.session_state.get("nltk_ready"):
         nltk.download('stopwords', quiet=True)
@@ -2474,6 +2477,11 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        if st.session_state.get('admin_authenticated'):
+            if st.sidebar.button("🔒 Lock Admin Portal", width="stretch"):
+                st.session_state.admin_authenticated = False
+                st.rerun()
+        
         if choice == 'User':
             # Modern upload section styling
             st.markdown("""
@@ -2614,207 +2622,176 @@ def main():
                     gap: 0.75rem; 
                     padding: 0.75rem 1rem; 
                     border-radius: 12px; 
-                    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(45, 212, 191, 0.15)); 
-                    border: 1px solid rgba(124, 58, 237, 0.35); 
-                    color: var(--text-bright); 
-                    font-weight: 700; 
-                    font-size: 0.95rem;
-                }
-                
-                .file-pill .icon { 
-                    font-size: 1.25rem; 
-                }
-                
-                /* Success badge */
-                .badge-success { 
-                    display: inline-flex; 
-                    align-items: center; 
-                    gap: 0.4rem; 
-                    font-size: 0.8rem; 
-                    font-weight: 700; 
-                    color: #46E1A1; 
-                    background: rgba(16, 185, 129, 0.12); 
-                    border: 1px solid rgba(16, 185, 129, 0.35); 
-                    padding: 0.35rem 0.7rem; 
-                    border-radius: 999px; 
-                }
-                
-                /* Meta text */
-                .meta { 
-                    color: #94a3b8; 
-                    font-size: 0.8rem; 
-                    margin-top: 0.5rem; 
-                }
-                
-                /* Chip badge */
-                .chip { 
-                    display: inline-flex; 
-                    align-items: center; 
-                    gap: 0.4rem; 
-                    padding: 0.4rem 0.8rem; 
-                    border-radius: 999px; 
-                    font-size: 0.8rem; 
-                    font-weight: 600; 
-                    border: 1px solid rgba(255, 255, 255, 0.1); 
-                    color: #cbd5e1; 
-                    background: rgba(255, 255, 255, 0.05); 
-                }
-                
-                /* Links */
-                a.inline { 
-                    color: #60a5fa; 
-                    text-decoration: none; 
-                    transition: all 0.2s ease;
-                }
-                
-                a.inline:hover { 
-                    color: #93c5fd;
-                    text-decoration: underline; 
                 }
                 </style>
             """, unsafe_allow_html=True)
 
-            # Minimal spacing before upload section
-            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-            
-            up_left, up_right = st.columns([3, 1])
-            with up_left:
-                # Custom CSS for the upload button
-                st.markdown("""
-                <style>
-                    /* Target the file uploader container */
-                    [data-testid='stFileUploader'] {
-                        width: 100%;
-                    }
-                    
-                    /* Hide the default dropzone text and icon */
-                    [data-testid='stFileUploader'] section > div:first-child {
-                        display: none;
-                    }
-                    
-                    /* Remove padding/border from the dropzone container */
-                    [data-testid='stFileUploader'] section {
-                        padding: 0;
-                        background-color: transparent;
-                        border: none;
-                        min-height: 0;
-                    }
-                    
-                    /* Style the Browse button */
-                    [data-testid='stFileUploader'] button {
-                        background-color: #6366F1 !important;
-                        color: white !important;
-                        border: none !important;
-                        border-radius: 4px !important;
-                        padding: 10px 24px !important;
-                        font-weight: 600 !important;
-                        font-size: 14px !important;
-                        line-height: 1.5 !important;
-                        text-transform: none !important;
-                        width: auto !important;
-                        box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2) !important;
-                        transition: all 0.2s ease !important;
-                        margin-top: 0 !important;
-                    }
-                    
-                    [data-testid='stFileUploader'] button:hover {
-                        background-color: #4F46E5 !important;
-                        transform: translateY(-1px);
-                        box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3) !important;
-                    }
-                    
-                    /* Add the "+ Upload Resume" text */
-                    [data-testid='stFileUploader'] button::after {
-                        content: " Resume";
-                        margin-left: 4px;
-                    }
-                    
-                    /* Card styling */
-                    .custom-upload-card {
-                        background: #1A1F3A;
-                        border-radius: 12px;
-                        padding: 24px;
-                        border: 1px solid rgba(99, 102, 241, 0.2);
-                        display: flex;
-                        flex-direction: column;
-                        gap: 16px;
-                        position: relative;
-                        overflow: hidden;
-                    }
-                    
-                    .custom-upload-card::before {
-                        content: "";
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 4px;
-                        height: 100%;
-                        background: #6366F1;
-                    }
-                    
-                    .upload-text {
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: #F8FAFC;
-                        margin-bottom: 4px;
-                    }
-                    
-                    .upload-subtext {
-                        font-size: 13px;
-                        color: #94A3B8;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                    }
-                    
-                    .info-icon {
-                        color: #94A3B8;
-                        font-size: 16px;
-                        float: right;
-                    }
-                </style>
-                
-                <div class="custom-upload-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <div class="upload-text">Get a head start by uploading your resume</div>
-                            <div class="upload-subtext">
-                                <span>Supported formats: PDF, DOCX</span>
-                            </div>
-                        </div>
-                        <div class="info-icon">ⓘ</div>
+            st.markdown("""
+            <style>
+            /* ── Entrance animation ── */
+            @keyframes fadeUpUpload {
+                from { opacity:0; transform:translateY(14px); }
+                to   { opacity:1; transform:translateY(0); }
+            }
+
+            .upload-section-wrap {
+                animation: fadeUpUpload 0.45s ease both;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            /* ── Layer 1: Resume Analysis Card ── */
+            .upload-intro-card {
+                background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.03) 100%);
+                border: 1px solid rgba(99,102,241,0.15);
+                border-radius: 16px;
+                padding: 24px 28px;
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .upload-intro-card:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 24px rgba(99,102,241,0.06);
+            }
+
+
+
+            /* ── Format Row ── */
+            .upload-format-row {
+                display: flex; align-items: center; justify-content: center;
+                gap: 8px; margin-top: 20px;
+            }
+            .upload-format-badge {
+                background: rgba(99,102,241,0.08);
+                border: 1px solid rgba(99,102,241,0.18);
+                border-radius: 6px;
+                padding: 3px 10px;
+                font-size: 10px;
+                font-weight: 800;
+                color: #A78BFA;
+                letter-spacing: 0.8px;
+            }
+            .upload-meta-pill {
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 6px;
+                padding: 3px 10px;
+                font-size: 10px;
+                color: #475569;
+                font-weight: 500;
+            }
+
+            /* ── Layer 3: Trust Grid ── */
+            .trust-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            .trust-badge {
+                background: rgba(17,24,39,0.5);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 14px;
+                padding: 16px 14px;
+                text-align: center;
+                transition: transform 0.2s, box-shadow 0.2s;
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+            .trust-badge:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(99,102,241,0.08);
+            }
+            .trust-badge svg { margin-bottom: 8px; }
+            .trust-badge-title {
+                font-size: 12px; font-weight: 700; color: #E2E8F0;
+                margin-bottom: 2px;
+            }
+            """, unsafe_allow_html=True)
+
+            # ── Layer 1: Resume Analysis Card ──
+            st.markdown("""
+            <div class="upload-section-wrap">
+              <div class="upload-intro-card">
+                <div style="display:flex; align-items:flex-start; gap:16px;">
+                  <div style="
+                      width:44px; height:44px; flex-shrink:0;
+                      background:linear-gradient(135deg,#6366F1,#8B5CF6);
+                      border-radius:12px;
+                      display:flex; align-items:center; justify-content:center;
+                      box-shadow:0 4px 14px rgba(99,102,241,0.4);
+                  ">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                  </div>
+                  <div style="flex:1;">
+                    <div style="font-size:15px; font-weight:700; color:#F8FAFC; margin-bottom:4px; letter-spacing:-0.1px;">Resume Analysis</div>
+                    <div style="font-size:13px; color:#64748B; line-height:1.65; margin-bottom:12px;">Upload your resume to unlock AI-powered analysis and personalized internship recommendations.</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span style="font-size:12px; color:#94A3B8; font-weight:500;">ATS Compatibility Score</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span style="font-size:12px; color:#94A3B8; font-weight:500;">Skill Gap Detection</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span style="font-size:12px; color:#94A3B8; font-weight:500;">Resume Parsing &amp; Extraction</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span style="font-size:12px; color:#94A3B8; font-weight:500;">Internship Matching</span>
+                      </div>
                     </div>
-                    <div style="margin-top: 8px;">
-                """, unsafe_allow_html=True)
-                
-                pdf_file = st.file_uploader("Upload Resume", type=["pdf"], label_visibility="collapsed", key="resume_pdf")
-                
-                st.markdown("""
-                    </div>
+                  </div>
                 </div>
-                """, unsafe_allow_html=True)
-            with up_right:
-                # Show file details card when available
-                if 'resume_pdf' in st.session_state and st.session_state['resume_pdf'] is not None:
-                    _f = st.session_state['resume_pdf']
-                    _size_kb = getattr(_f, 'size', 0) // 1024
-                    _ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-                    st.markdown(f"""
-                        <div class='card fade-in' style='margin-top:.6rem;'>
-                            <div class='file-pill'><span class='icon'>📄</span><span>{_f.name}</span></div>
-                            <div style='margin-top:.45rem; display:flex; align-items:center; justify-content:space-between;'>
-                                <span class='badge-success'>✓ Uploaded Successfully</span>
-                                <span class='chip'>Secure</span>
-                            </div>
-                            <div class='meta'>Size: {_size_kb} KB • Uploaded: {_ts}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown("""
-                        <div class='card fade-in' style='margin-top:.6rem;'>
-                            <div class='meta'>No file selected.</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            pdf_file = st.file_uploader("Upload Resume", type=["pdf"], label_visibility="collapsed", key="resume_pdf")
+
+            st.markdown("""
+            <div class="upload-section-wrap" style="margin-top: 14px;">
+              <div class="upload-format-row">
+                <span class="upload-format-badge">PDF</span>
+                <span class="upload-meta-pill">Max 50 MB</span>
+              </div>
+
+              <!-- Layer 3: Trust Indicators -->
+              <div class="trust-grid" style="margin-top: 16px;">
+                <div class="trust-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  <div class="trust-badge-title">Secure Upload</div>
+                  <div class="trust-badge-sub">Files are 100% private</div>
+                </div>
+                <div class="trust-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                  <div class="trust-badge-title">AI Parsing</div>
+                  <div class="trust-badge-sub">Instant skill extraction</div>
+                </div>
+                <div class="trust-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                  </svg>
+                  <div class="trust-badge-title">Smart Matching</div>
+                  <div class="trust-badge-sub">Personalized matches</div>
+                </div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Initialize resume_data
             resume_data = None
@@ -4458,240 +4435,560 @@ def main():
                 st.rerun()
 
         elif choice == 'Admin':
-            # Premium Subheader layout
-            st.markdown("""
-            <div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
-                <div style="width:4px; height:36px; border-radius:4px; background:linear-gradient(180deg,#6366F1,#8B5CF6);"></div>
-                <div>
-                    <h2 style="font-size:24px; font-weight:800; color:#FFFFFF; margin:0; letter-spacing:-0.5px;">📊 Admin Analytics Portal</h2>
-                    <p style="font-size:14px; color:#94A3B8; margin:2px 0 0 0;">Interactive system reporting, candidate overview and logs</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Fetch user logs
-            user_data = db_manager.get_user_data(limit=1000)
-            if user_data:
-                df = pd.DataFrame(user_data, columns=[
-                    'ID', 'Name', 'Email', 'Resume Score', 'Timestamp', 'Pages',
-                    'Predicted Field', 'User Level', 'Skills', 'Recommended Skills', 'Courses'
-                ])
-                
-                # Safe casting/parsing of score/pages
-                df['Score_num'] = pd.to_numeric(df['Resume Score'], errors='coerce')
-                df['Score_num'] = df['Score_num'].fillna(0.0)
-                df['Pages_num'] = pd.to_numeric(df['Pages'], errors='coerce')
-                df['Pages_num'] = df['Pages_num'].fillna(1.0)
-                
-                # Introduce layout tabs
-                tab_analytics, tab_database = st.tabs(["📈 System Analytics", "👥 Candidate Profiles"])
-                
-                with tab_analytics:
-                    # --- Glassmorphism KPI Metrics ---
-                    total_users = len(df)
-                    avg_score = df['Score_num'].mean()
-                    top_role = df['Predicted Field'].mode()
-                    top_role_str = top_role[0] if not top_role.empty else "N/A"
-                    avg_pages = df['Pages_num'].mean()
-                    
-                    # Layout custom metrics cards using HTML column layouts
-                    st.markdown(f"""
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                        <!-- Metric Card 1 -->
-                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Total Resumes</div>
-                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{total_users}</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #10B981; margin-top: 4px;">📈 100% database match</div>
-                        </div>
-                        <!-- Metric Card 2 -->
-                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Average ATS Score</div>
-                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{avg_score:.1f}%</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #a78bfa; margin-top: 4px;">✨ Tailored suggestions</div>
-                        </div>
-                        <!-- Metric Card 3 -->
-                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Top Predicted Field</div>
-                            <div style="font-size: 20px; font-weight: 800; color: #ffffff; margin-top: 14px; margin-bottom: 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{top_role_str}</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #3b82f6; margin-top: 10px;">🎯 Primary field focus</div>
-                        </div>
-                        <!-- Metric Card 4 -->
-                        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.05)); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1px;">Avg. Page Count</div>
-                            <div style="font-size: 32px; font-weight: 800; color: #ffffff; margin-top: 8px; margin-bottom: 2px;">{avg_pages:.1f}</div>
-                            <div style="font-size: 12px; font-weight: 600; color: #cbd5e1; margin-top: 4px;">📄 Standard layout</div>
+            # Admin auth gate
+            if not Config.ADMIN_PASSWORD:
+                st.markdown("""
+                <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:20px 24px; margin-top:24px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:22px;">⚠️</span>
+                        <div>
+                            <div style="font-weight:700; color:#FCA5A5; font-size:15px;">Admin Portal Not Configured</div>
+                            <div style="color:#94A3B8; font-size:13px; margin-top:4px;">Set <code style='background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;'>ADMIN_PASSWORD</code> in your <code style='background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;'>.env</code> file and restart the app.</div>
                         </div>
                     </div>
+                </div>
+                """, unsafe_allow_html=True)
+            elif not st.session_state.get('admin_authenticated'):
+
+                # ══════════════════════════════════════════════════════════
+                # CSS — Page background, animations, form overrides
+                # ══════════════════════════════════════════════════════════
+                st.markdown("""
+                <style>
+                /* ── Page-level background ── */
+                [data-testid="stAppViewContainer"] > .main {
+                    background: radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99,102,241,0.12) 0%, transparent 60%),
+                                radial-gradient(ellipse 60% 50% at 80% 100%, rgba(139,92,246,0.10) 0%, transparent 55%),
+                                #0B1120 !important;
+                }
+
+                /* ── Entrance animation ── */
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(18px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes glowPulse {
+                    0%, 100% { box-shadow: 0 0 40px rgba(99,102,241,0.12); }
+                    50%      { box-shadow: 0 0 70px rgba(99,102,241,0.22); }
+                }
+                .admin-login-left  { animation: fadeUp 0.5s ease both; }
+                .admin-login-right { animation: fadeUp 0.5s ease 0.12s both; }
+
+                /* ── Form: glass card (bottom half) ── */
+                [data-testid="stForm"]:has(input[data-testid="stTextInputRootElement"]) {
+                    background: rgba(17,24,39,0.7) !important;
+                    backdrop-filter: blur(20px) !important;
+                    -webkit-backdrop-filter: blur(20px) !important;
+                    border: 1px solid rgba(99,102,241,0.18) !important;
+                    border-top: none !important;
+                    border-radius: 0 0 24px 24px !important;
+                    padding: 24px 36px 36px !important;
+                    margin-top: -1px !important;
+                    box-shadow: none !important;
+                }
+
+                /* ── Text input ── */
+                [data-testid="stTextInputRootElement"] input {
+                    background: rgba(255,255,255,0.04) !important;
+                    border: 1.5px solid rgba(99,102,241,0.2) !important;
+                    border-radius: 12px !important;
+                    color: #F8FAFC !important;
+                    font-size: 14px !important;
+                    height: 48px !important;
+                    padding: 0 16px !important;
+                    transition: border-color 0.2s, box-shadow 0.2s !important;
+                }
+                [data-testid="stTextInputRootElement"] input:focus {
+                    border-color: #6366F1 !important;
+                    box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+                    outline: none !important;
+                }
+                [data-testid="stTextInputRootElement"] input::placeholder {
+                    color: #475569 !important;
+                }
+
+                /* ── Submit button ── */
+                [data-testid="stFormSubmitButton"] > button {
+                    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%) !important;
+                    border: none !important;
+                    border-radius: 12px !important;
+                    font-weight: 700 !important;
+                    font-size: 15px !important;
+                    height: 50px !important;
+                    letter-spacing: 0.3px !important;
+                    color: #fff !important;
+                    transition: transform 0.18s, box-shadow 0.18s !important;
+                    box-shadow: 0 4px 20px rgba(99,102,241,0.35) !important;
+                }
+                [data-testid="stFormSubmitButton"] > button:hover {
+                    transform: translateY(-2px) !important;
+                    box-shadow: 0 8px 32px rgba(99,102,241,0.5) !important;
+                }
+                [data-testid="InputInstructions"] { display: none !important; }
+                </style>
+                """, unsafe_allow_html=True)
+
+                # ══════════════════════════════════════════════════════════
+                # Two-column layout  45% | 55%
+                # ══════════════════════════════════════════════════════════
+                left_col, right_col = st.columns([9, 11])
+
+                # ─────────────────── LEFT HERO ────────────────────────────
+                with left_col:
+                    st.markdown("""
+                    <div class="admin-login-left" style="padding: 8px 0 0; min-height: 540px;">
+
+                      <div style="display:flex; align-items:center; gap:10px; margin-bottom:28px;">
+                        <div style="
+                            width:36px; height:36px;
+                            background: linear-gradient(135deg,#6366F1,#8B5CF6);
+                            border-radius:10px;
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:18px;
+                            box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+                        ">🎯</div>
+                        <span style="font-size:15px; font-weight:800; color:#F8FAFC; letter-spacing:0.2px;">InternHunt</span>
+                        <span style="
+                            font-size:10px; font-weight:700; color:#A78BFA;
+                            background: rgba(99,102,241,0.12);
+                            border: 1px solid rgba(99,102,241,0.25);
+                            border-radius:20px; padding:3px 10px;
+                            letter-spacing:1px; text-transform:uppercase;
+                        ">Admin</span>
+                      </div>
+
+                      <h1 style="
+                          font-size:32px; font-weight:800; color:#F8FAFC;
+                          line-height:1.2; margin:0 0 14px;
+                          letter-spacing:-0.5px;
+                      ">Admin Intelligence<br><span style="color:#818CF8;">Portal</span></h1>
+
+                      <p style="
+                          font-size:14px; color:#64748B; line-height:1.75;
+                          margin:0 0 36px; max-width:340px;
+                      ">Secure access to candidate analytics, recruiter insights, resume database, AI recommendations and platform monitoring.</p>
+
+                      <div style="
+                          display:grid; grid-template-columns:1fr 1fr;
+                          gap:12px; margin-bottom:20px;
+                          filter: blur(4px); opacity:0.45;
+                          pointer-events:none; user-select:none;
+                      ">
+                        <div style="background:rgba(30,42,69,0.6); border:1px solid rgba(99,102,241,0.15); border-radius:14px; padding:16px 18px;">
+                          <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Applications Today</div>
+                          <div style="font-size:28px; font-weight:800; color:#F8FAFC; line-height:1;">152</div>
+                          <div style="font-size:11px; color:#10B981; margin-top:4px;">↑ +12 from yesterday</div>
+                        </div>
+                        <div style="background:rgba(30,42,69,0.6); border:1px solid rgba(99,102,241,0.15); border-radius:14px; padding:16px 18px;">
+                          <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Registered Candidates</div>
+                          <div style="font-size:28px; font-weight:800; color:#F8FAFC; line-height:1;">23,482</div>
+                          <div style="font-size:11px; color:#A78BFA; margin-top:4px;">Platform total</div>
+                        </div>
+                        <div style="background:rgba(30,42,69,0.6); border:1px solid rgba(99,102,241,0.15); border-radius:14px; padding:16px 18px;">
+                          <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Resume Match Accuracy</div>
+                          <div style="font-size:28px; font-weight:800; color:#F8FAFC; line-height:1;">94<span style="font-size:16px; color:#64748B;">%</span></div>
+                          <div style="font-size:11px; color:#10B981; margin-top:4px;">↑ +2% this week</div>
+                        </div>
+                        <div style="background:rgba(30,42,69,0.6); border:1px solid rgba(99,102,241,0.15); border-radius:14px; padding:16px 18px;">
+                          <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AI Recommendations</div>
+                          <div style="font-size:28px; font-weight:800; color:#F8FAFC; line-height:1;">1,284</div>
+                          <div style="font-size:11px; color:#A78BFA; margin-top:4px;">Generated this month</div>
+                        </div>
+                      </div>
+
+                      <div style="
+                          background:rgba(17,24,39,0.5); border:1px solid rgba(255,255,255,0.05);
+                          border-radius:14px; padding:16px 20px;
+                          filter: blur(4px); opacity:0.4;
+                          pointer-events:none; user-select:none;
+                      ">
+                        <div style="font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Recent Activity</div>
+                        <div style="display:flex; flex-direction:column; gap:9px;">
+                          <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:6px; height:6px; border-radius:50%; background:#6366F1; flex-shrink:0;"></div>
+                            <span style="font-size:12px; color:#94A3B8;">Resume uploaded by candidate</span>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:6px; height:6px; border-radius:50%; background:#10B981; flex-shrink:0;"></div>
+                            <span style="font-size:12px; color:#94A3B8;">New internship posted</span>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:6px; height:6px; border-radius:50%; background:#A78BFA; flex-shrink:0;"></div>
+                            <span style="font-size:12px; color:#94A3B8;">Candidate shortlisted</span>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="width:6px; height:6px; border-radius:50%; background:#F59E0B; flex-shrink:0;"></div>
+                            <span style="font-size:12px; color:#94A3B8;">Analytics report updated</span>
+                          </div>
+                        </div>
+                      </div>
+
+
+                      <div style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span style="font-size:12px; color:#475569;">Stats locked until authenticated</span>
+                      </div>
+
+                    </div>
                     """, unsafe_allow_html=True)
-                    
-                    # --- Distribution Charts Section ---
-                    st.markdown("<h3 style='font-size:18px; font-weight:700; color:#E2E8F0; margin-bottom:16px;'>📊 Distribution Analyses</h3>", unsafe_allow_html=True)
-                    
-                    chart_col1, chart_col2 = st.columns(2)
-                    
-                    with chart_col1:
-                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>Top Career Fields</h4></div>", unsafe_allow_html=True)
-                        field_counts = df['Predicted Field'].value_counts().reset_index()
-                        field_counts.columns = ['Field', 'Count']
-                        
-                        # Donut chart
-                        fig_fields = px.pie(
-                            field_counts,
-                            names="Field",
-                            values="Count",
-                            hole=0.4,
-                            color_discrete_sequence=px.colors.sequential.RdPu_r,
+
+                # ─────────────────── RIGHT AUTH PANEL ─────────────────────
+                with right_col:
+                    st.markdown("""
+                    <div class="admin-login-right" style="padding: 8px 0 0;">
+                      <div style="
+                          background: rgba(17,24,39,0.75);
+                          backdrop-filter: blur(24px);
+                          -webkit-backdrop-filter: blur(24px);
+                          border: 1px solid rgba(99,102,241,0.2);
+                          border-bottom: none;
+                          border-radius: 24px 24px 0 0;
+                          padding: 44px 36px 32px;
+                          box-shadow: 0 -8px 60px rgba(99,102,241,0.08);
+                      ">
+                        <div style="
+                            width:64px; height:64px;
+                            background: linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);
+                            border-radius:18px;
+                            display:flex; align-items:center; justify-content:center;
+                            margin-bottom:24px;
+                            box-shadow: 0 8px 24px rgba(99,102,241,0.45), 0 0 0 8px rgba(99,102,241,0.07);
+                        ">
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <h2 style="font-size:24px; font-weight:800; color:#F8FAFC; margin:0 0 8px; letter-spacing:-0.4px;">Administrator Login</h2>
+                        <p style="font-size:13px; color:#64748B; margin:0; line-height:1.7;">Authentication required to access InternHunt<br>analytics and candidate data.</p>
+                        <div style="height:1px; background:linear-gradient(90deg,transparent,rgba(99,102,241,0.2),transparent); margin:28px 0 0;"></div>
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # Streamlit form renders as the seamless card bottom
+                    with st.form("admin_login_form", enter_to_submit=True):
+                        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+                        pw = st.text_input(
+                            "Password",
+                            type="password",
+                            key="admin_pw_input",
+                            label_visibility="collapsed",
+                            placeholder="Enter admin password..."
                         )
-                        fig_fields.update_layout(
-                            paper_bgcolor="rgba(0,0,0,0)",
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(family="sans-serif", color="#CBD5E1"),
-                            showlegend=True,
-                            legend=dict(
+                        st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+                        submitted = st.form_submit_button("Access Dashboard →", type="primary", width="stretch")
+                        if submitted:
+                            if pw == Config.ADMIN_PASSWORD:
+                                st.session_state.admin_authenticated = True
+                                st.rerun()
+                            else:
+                                st.markdown("""
+                                <div style="
+                                    display:flex; align-items:center; gap:10px;
+                                    background:rgba(239,68,68,0.08);
+                                    border:1px solid rgba(239,68,68,0.22);
+                                    border-radius:10px; padding:12px 16px; margin-top:14px;
+                                ">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <span style="font-size:13px; color:#FCA5A5; font-weight:500;">Incorrect password — access denied</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                    st.markdown("""
+                    <div style="text-align:center; margin-top:20px;">
+                        <span style="font-size:11px; color:#334155;">
+                            🔐 &nbsp;256-bit encrypted session &nbsp;·&nbsp; InternHunt v2.0
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                # ── Page header ───────────────────────────────────────────
+                st.markdown("""
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div style="width:4px; height:40px; border-radius:4px; background:linear-gradient(180deg,#6366F1,#8B5CF6);"></div>
+                        <div>
+                            <h2 style="font-size:22px; font-weight:800; color:#F1F5F9; margin:0; letter-spacing:-0.3px;">Admin Analytics Portal</h2>
+                            <p style="font-size:13px; color:#64748B; margin:3px 0 0;">System reporting, candidate insights and data export</p>
+                        </div>
+                    </div>
+                    <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:6px 14px; font-size:12px; font-weight:600; color:#10B981; letter-spacing:0.5px;">● LIVE</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Fetch user logs
+                try:
+                    user_data = db_manager.get_user_data(limit=1000)
+                except Exception as e:
+                    st.error(f"Database connection failed: {e}")
+                    user_data = None
+
+                if user_data:
+                    df = pd.DataFrame(user_data, columns=[
+                        'ID', 'Name', 'Email', 'Resume Score', 'Timestamp', 'Pages',
+                        'Predicted Field', 'User Level', 'Skills', 'Recommended Skills', 'Courses'
+                    ])
+
+                    # Safe casting/parsing of score/pages
+                    df['Score_num'] = pd.to_numeric(df['Resume Score'], errors='coerce')
+                    df['Score_num'] = df['Score_num'].fillna(0.0)
+                    df['Pages_num'] = pd.to_numeric(df['Pages'], errors='coerce')
+                    df['Pages_num'] = df['Pages_num'].fillna(1.0)
+
+                    # Tabs
+                    tab_analytics, tab_database = st.tabs(["📈 System Analytics", "👥 Candidate Registry"])
+
+                    with tab_analytics:
+                        total_users = len(df)
+                        avg_score   = df['Score_num'].mean()
+                        top_role    = df['Predicted Field'].mode()
+                        top_role_str = top_role[0] if not top_role.empty else "N/A"
+                        avg_pages   = df['Pages_num'].mean()
+
+                        # ── KPI Cards ────────────────────────────────────────
+                        st.markdown(f"""
+                        <div style="
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            gap: 16px;
+                            margin-bottom: 36px;
+                        ">
+                            <div style="
+                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+                                border: 1px solid rgba(99,102,241,0.2);
+                                border-radius: 14px; padding: 22px 18px;
+                            ">
+                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Total Resumes</div>
+                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{total_users}</div>
+                                <div style="font-size:12px; color:#10B981; margin-top:8px; font-weight:600;">↑ All records</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+                                border: 1px solid rgba(99,102,241,0.2);
+                                border-radius: 14px; padding: 22px 18px;
+                            ">
+                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg ATS Score</div>
+                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{avg_score:.1f}<span style='font-size:18px; color:#64748B;'>%</span></div>
+                                <div style="font-size:12px; color:#A78BFA; margin-top:8px; font-weight:600;">Platform average</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+                                border: 1px solid rgba(99,102,241,0.2);
+                                border-radius: 14px; padding: 22px 18px;
+                            ">
+                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Top Field</div>
+                                <div style="font-size:19px; font-weight:800; color:#F1F5F9; line-height:1; margin-top:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">{top_role_str}</div>
+                                <div style="font-size:12px; color:#3B82F6; margin-top:8px; font-weight:600;">Most common</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+                                border: 1px solid rgba(99,102,241,0.2);
+                                border-radius: 14px; padding: 22px 18px;
+                            ">
+                                <div style="font-size:11px; font-weight:700; color:#6366F1; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:10px;">Avg Pages</div>
+                                <div style="font-size:34px; font-weight:800; color:#F1F5F9; line-height:1;">{avg_pages:.1f}</div>
+                                <div style="font-size:12px; color:#94A3B8; margin-top:8px; font-weight:600;">Per resume</div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        # ── Section divider ───────────────────────────────────
+                        st.markdown("""
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                            <div style="font-size:14px; font-weight:700; color:#CBD5E1;">Distribution Breakdown</div>
+                            <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        chart_col1, chart_col2 = st.columns(2)
+
+                        with chart_col1:
+                            st.markdown("""
+                            <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
+                                        border-radius:12px; padding:16px 18px; margin-bottom:4px;">
+                                <div style="font-size:13px; font-weight:600; color:#CBD5E1;">Career Field Distribution</div>
+                                <div style="font-size:11px; color:#475569; margin-top:2px;">Predicted field across all resumes</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            field_counts = df['Predicted Field'].value_counts().reset_index()
+                            field_counts.columns = ['Field', 'Count']
+                            fig_fields = px.pie(
+                                field_counts,
+                                names="Field",
+                                values="Count",
+                                hole=0.4,
+                                color_discrete_sequence=px.colors.sequential.RdPu_r,
+                            )
+                            fig_fields.update_layout(
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                                font=dict(family="Inter, sans-serif", color="#CBD5E1"),
+                                showlegend=True,
+                                legend=dict(
+                                    orientation="h",
+                                    yanchor="top",
+                                    y=-0.15,
+                                    xanchor="center",
+                                    x=0.5,
+                                    font=dict(size=10)
+                                ),
+                                margin=dict(t=10, b=10, l=10, r=10),
+                                height=320,
+                            )
+                            fig_fields.update_traces(
+                                textposition='inside',
+                                textinfo='percent',
+                                insidetextorientation='horizontal'
+                            )
+                            st.plotly_chart(fig_fields, width="stretch", config={'displayModeBar': False})
+
+                        with chart_col2:
+                            st.markdown("""
+                            <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
+                                        border-radius:12px; padding:16px 18px; margin-bottom:4px;">
+                                <div style="font-size:13px; font-weight:600; color:#CBD5E1;">Experience Level Breakdown</div>
+                                <div style="font-size:11px; color:#475569; margin-top:2px;">Candidate proficiency distribution</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            level_counts = df['User Level'].value_counts().reset_index()
+                            level_counts.columns = ['Level', 'Count']
+                            fig_levels = px.bar(
+                                level_counts,
+                                x="Count",
+                                y="Level",
                                 orientation="h",
-                                yanchor="top",
-                                y=-0.15,
-                                xanchor="center",
-                                x=0.5,
-                                font=dict(size=10)
-                            ),
-                            margin=dict(t=10, b=10, l=10, r=10),
-                            height=320,
+                                color="Level",
+                                color_discrete_sequence=px.colors.sequential.Purples_r,
+                            )
+                            fig_levels.update_layout(
+                                paper_bgcolor="rgba(0,0,0,0)",
+                                plot_bgcolor="rgba(0,0,0,0)",
+                                font=dict(family="Inter, sans-serif", color="#CBD5E1"),
+                                showlegend=False,
+                                xaxis=dict(
+                                    showgrid=True,
+                                    gridcolor="rgba(255,255,255,0.05)",
+                                    tickformat=",d"
+                                ),
+                                yaxis=dict(
+                                    showgrid=False,
+                                    categoryorder="total ascending"
+                                ),
+                                margin=dict(t=10, b=10, l=10, r=10),
+                                height=320,
+                            )
+                            st.plotly_chart(fig_levels, width="stretch", config={'displayModeBar': False})
+
+                        # ── ATS Score Distribution ────────────────────────────
+                        st.markdown("""
+                        <div style="background:#0F172A; border:1px solid rgba(255,255,255,0.06);
+                                    border-radius:12px; padding:16px 18px; margin:24px 0 4px;">
+                            <div style="font-size:13px; font-weight:600; color:#CBD5E1;">ATS Score Distribution</div>
+                            <div style="font-size:11px; color:#475569; margin-top:2px;">Candidate quality bracket breakdown</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        def get_bucket(val):
+                            if val <= 40: return "0-40% (Poor)"
+                            if val <= 60: return "41-60% (Average)"
+                            if val <= 80: return "61-80% (Good)"
+                            return "81-100% (Excellent)"
+
+                        df['Score_Range'] = df['Score_num'].apply(get_bucket)
+                        bucket_order = ["0-40% (Poor)", "41-60% (Average)", "61-80% (Good)", "81-100% (Excellent)"]
+                        score_counts = df['Score_Range'].value_counts().reindex(bucket_order).fillna(0).reset_index()
+                        score_counts.columns = ['Score Bracket', 'Candidates Count']
+
+                        fig_scores = px.area(
+                            score_counts,
+                            x="Score Bracket",
+                            y="Candidates Count",
+                            markers=True,
                         )
-                        fig_fields.update_traces(
-                            textposition='inside',
-                            textinfo='percent',
-                            insidetextorientation='horizontal'
+                        fig_scores.update_traces(
+                            line=dict(color="#6366F1", width=3),
+                            fillcolor="rgba(99, 102, 241, 0.15)",
+                            mode="lines+markers",
+                            marker=dict(size=8, color="#8B5CF6", line=dict(color="#FFFFFF", width=1.5))
                         )
-                        st.plotly_chart(fig_fields, use_container_width=True, config={'displayModeBar': False})
-                        
-                    with chart_col2:
-                        st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>Experience Levels</h4></div>", unsafe_allow_html=True)
-                        level_counts = df['User Level'].value_counts().reset_index()
-                        level_counts.columns = ['Level', 'Count']
-                        
-                        # Bar chart with purple/indigo sequence
-                        fig_levels = px.bar(
-                            level_counts,
-                            x="Count",
-                            y="Level",
-                            orientation="h",
-                            color="Level",
-                            color_discrete_sequence=px.colors.sequential.Purples_r,
-                        )
-                        fig_levels.update_layout(
+                        fig_scores.update_layout(
                             paper_bgcolor="rgba(0,0,0,0)",
                             plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(family="sans-serif", color="#CBD5E1"),
-                            showlegend=False,
-                            xaxis=dict(
+                            font=dict(family="Inter, sans-serif", color="#CBD5E1"),
+                            xaxis=dict(showgrid=False),
+                            yaxis=dict(
                                 showgrid=True,
                                 gridcolor="rgba(255,255,255,0.05)",
                                 tickformat=",d"
                             ),
-                            yaxis=dict(
-                                showgrid=False,
-                                categoryorder="total ascending"
-                            ),
-                            margin=dict(t=10, b=10, l=10, r=10),
-                            height=320,
+                            margin=dict(t=15, b=15, l=15, r=15),
+                            height=260,
                         )
-                        st.plotly_chart(fig_levels, use_container_width=True, config={'displayModeBar': False})
-                        
-                    # Third Chart: Score Spread Area Chart
-                    st.markdown("<div style='margin-top:24px;'></div>", unsafe_allow_html=True)
-                    st.markdown("<div style='background-color:#111726; padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); margin-bottom:12px;'><h4 style='font-size:14px; font-weight:600; color:#CBD5E1; margin:0;'>ATS Score Frequency Distribution</h4></div>", unsafe_allow_html=True)
-                    
-                    # Create score buckets: 0-40, 41-60, 61-80, 81-100
-                    def get_bucket(val):
-                        if val <= 40: return "0-40% (Poor)"
-                        if val <= 60: return "41-60% (Average)"
-                        if val <= 80: return "61-80% (Good)"
-                        return "81-100% (Excellent)"
-                    
-                    df['Score_Range'] = df['Score_num'].apply(get_bucket)
-                    bucket_order = ["0-40% (Poor)", "41-60% (Average)", "61-80% (Good)", "81-100% (Excellent)"]
-                    score_counts = df['Score_Range'].value_counts().reindex(bucket_order).fillna(0).reset_index()
-                    score_counts.columns = ['Score Bracket', 'Candidates Count']
-                    
-                    # Smooth area/line chart
-                    fig_scores = px.area(
-                        score_counts,
-                        x="Score Bracket",
-                        y="Candidates Count",
-                        markers=True,
-                    )
-                    fig_scores.update_traces(
-                        line=dict(color="#6366F1", width=3),
-                        fillcolor="rgba(99, 102, 241, 0.15)",
-                        mode="lines+markers",
-                        marker=dict(size=8, color="#8B5CF6", line=dict(color="#FFFFFF", width=1.5))
-                    )
-                    fig_scores.update_layout(
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font=dict(family="sans-serif", color="#CBD5E1"),
-                        xaxis=dict(showgrid=False),
-                        yaxis=dict(
-                            showgrid=True,
-                            gridcolor="rgba(255,255,255,0.05)",
-                            tickformat=",d"
-                        ),
-                        margin=dict(t=15, b=15, l=15, r=15),
-                        height=260,
-                    )
-                    st.plotly_chart(fig_scores, use_container_width=True, config={'displayModeBar': False})
-                    
-                with tab_database:
-                    # --- Candidate registry Search & Filters ---
-                    st.markdown("<h3 style='font-size:18px; font-weight:700; color:#E2E8F0; margin-bottom:12px;'>🔍 Filter Candidates</h3>", unsafe_allow_html=True)
-                    
-                    f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
-                    with f_col1:
-                        search_q = st.text_input("Search Name / Email", value="", placeholder="Search by name or email...", key="admin_search")
-                    with f_col2:
-                        fields_list = ["All Fields"] + sorted(list(df['Predicted Field'].dropna().unique()))
-                        selected_field = st.selectbox("Predicted Field", fields_list, index=0, key="admin_field_filter")
-                    with f_col3:
-                        levels_list = ["All Levels"] + sorted(list(df['User Level'].dropna().unique()))
-                        selected_level = st.selectbox("Experience Level", levels_list, index=0, key="admin_level_filter")
-                    
-                    # Minimum Score filter using slider
-                    min_score_filter = st.slider("Minimum ATS Score Requirement (%)", min_value=0, max_value=100, value=0, step=5, key="admin_score_filter")
-                    
-                    # Apply Filters
-                    filtered_df = df.copy()
-                    if search_q.strip():
-                        q = search_q.strip().lower()
-                        filtered_df = filtered_df[
-                            filtered_df['Name'].str.lower().str.contains(q, na=False) |
-                            filtered_df['Email'].str.lower().str.contains(q, na=False)
-                        ]
-                    if selected_field != "All Fields":
-                        filtered_df = filtered_df[filtered_df['Predicted Field'] == selected_field]
-                    if selected_level != "All Levels":
-                        filtered_df = filtered_df[filtered_df['User Level'] == selected_level]
-                        
-                    filtered_df = filtered_df[filtered_df['Score_num'] >= min_score_filter]
-                    
-                    # Drop helper columns
-                    display_df = filtered_df.drop(columns=['Score_num', 'Pages_num', 'Score_Range'], errors='ignore')
-                    
-                    st.markdown(f"<div style='margin-top:14px; margin-bottom:8px; font-size:13px; color:#94A3B8; font-weight:600;'>Showing {len(display_df)} matching candidates</div>", unsafe_allow_html=True)
-                    st.dataframe(display_df, width='stretch')
-                    
-                    # Action row for CSV download
-                    st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
-                    download_csv_data = display_df.to_csv(index=False)
-                    st.download_button(
-                        label="📥 Export Candidate Registry as CSV",
-                        data=download_csv_data,
-                        file_name="candidate_registry.csv",
-                        mime="text/csv",
-                        key="admin_download_btn"
-                    )
-            else:
-                st.info("No candidate profile logs found in database.")
+                        st.plotly_chart(fig_scores, width="stretch", config={'displayModeBar': False})
+
+                    with tab_database:
+                        # ── Filter bar ───────────────────────────────────────
+                        st.markdown("""
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                            <div style="font-size:14px; font-weight:700; color:#CBD5E1;">Candidate Registry</div>
+                            <div style="flex:1; height:1px; background:rgba(255,255,255,0.06);"></div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
+                        with f_col1:
+                            search_q = st.text_input("Search", value="", placeholder="Search by name or email...", key="admin_search", label_visibility="collapsed")
+                        with f_col2:
+                            fields_list = ["All Fields"] + sorted(list(df['Predicted Field'].dropna().unique()))
+                            selected_field = st.selectbox("Field", fields_list, index=0, key="admin_field_filter", label_visibility="collapsed")
+                        with f_col3:
+                            levels_list = ["All Levels"] + sorted(list(df['User Level'].dropna().unique()))
+                            selected_level = st.selectbox("Level", levels_list, index=0, key="admin_level_filter", label_visibility="collapsed")
+
+                        min_score_filter = st.slider(
+                            "Minimum ATS Score", min_value=0, max_value=100, value=0, step=5,
+                            key="admin_score_filter"
+                        )
+
+                        # Apply Filters
+                        filtered_df = df.copy()
+                        if search_q.strip():
+                            q = search_q.strip().lower()
+                            filtered_df = filtered_df[
+                                filtered_df['Name'].str.lower().str.contains(q, na=False) |
+                                filtered_df['Email'].str.lower().str.contains(q, na=False)
+                            ]
+                        if selected_field != "All Fields":
+                            filtered_df = filtered_df[filtered_df['Predicted Field'] == selected_field]
+                        if selected_level != "All Levels":
+                            filtered_df = filtered_df[filtered_df['User Level'] == selected_level]
+                        filtered_df = filtered_df[filtered_df['Score_num'] >= min_score_filter]
+
+                        display_df = filtered_df.drop(columns=['Score_num', 'Pages_num', 'Score_Range'], errors='ignore')
+
+                        st.markdown(f"""
+                        <div style="font-size:12px; color:#475569; font-weight:600; margin:12px 0 8px;">
+                            {len(display_df)} candidate{'s' if len(display_df) != 1 else ''} match your filters
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.dataframe(display_df, width="stretch")
+
+                        st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+                        download_csv_data = display_df.to_csv(index=False)
+                        st.download_button(
+                            label="📥 Export as CSV",
+                            data=download_csv_data,
+                            file_name="candidate_registry.csv",
+                            mime="text/csv",
+                            key="admin_download_btn"
+                        )
+                else:
+                    st.markdown("""
+                    <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);
+                                border-radius:12px; padding:32px; text-align:center; margin-top:24px;">
+                        <div style="font-size:2rem; margin-bottom:12px;">📭</div>
+                        <div style="font-size:15px; font-weight:600; color:#94A3B8;">No candidate records yet</div>
+                        <div style="font-size:13px; color:#475569; margin-top:6px;">Upload and analyze a resume to start populating the registry.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
     
     # ============ FOOTER ============ 
     st.markdown(""" 

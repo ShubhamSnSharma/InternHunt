@@ -12,8 +12,8 @@
 
 ---
 
-**Quick Links:**  
-[Landing Page (Vercel)](https://internhuntt.vercel.app) &nbsp;•&nbsp; [Streamlit Web App](https://internhunt.streamlit.app)
+**👉 Quick Links:**  
+[🌟 Landing Page (Vercel)](https://internhuntt.vercel.app) &nbsp;•&nbsp; [🚀 Streamlit Web App](https://internhunt.streamlit.app)
 
 </div>
 
@@ -31,9 +31,17 @@
 ![Main App Landing Page](./screenshots/landing-page-main.png)
 *Core interactive app landing page on Streamlit Cloud*
 
-### 💼 Resume Analysis
+### 💼 AI Resume Analysis
 ![Resume Upload](./screenshots/resume-upload.png)
-*Smart resume parsing and classification*
+*Redesigned SaaS-style upload interface card*
+
+### 🔄 Resume Uploaded State
+![Resume Uploaded State](./screenshots/resume-uploaded-state.png)
+*Smooth transition indicating successful upload and analysis readiness*
+
+### 🔐 Admin Login Portal
+![Admin Login](./screenshots/admin-login.png)
+*Two-column professional portal inspired by Supabase and Clerk*
 
 ### 🤖 AI Career Assistant
 ![AI Chatbot](./screenshots/chatbot.png)
@@ -60,12 +68,40 @@
 
 | Stage | What Happens |
 |-------|--------------|
-| **1. Upload & Parse** | PDF/DOCX support (50MB limit), text extraction via `pypdf` + `python-docx` |
+| **1. Upload & Parse** | PDF support (50MB limit), text extraction via `pypdf` |
 | **2. Skill Detection** | 100+ technical skills via spaCy NLP + fuzzy matching (e.g., `k8s` → `Kubernetes`) |
 | **3. Role Prediction** | MLP Neural Network (TF-IDF → 128/64 hidden layers) → Top 3 roles with confidence |
 | **4. ATS Scoring** | 5-factor breakdown: Content (50%), Formatting (15%), Keywords (20%), Experience (10%), Readability (5%) |
 | **5. Recommendations** | Live internships (Jooble, Internshala, Remotive, GitHub) + curated courses |
 | **6. AI Assistant** | Gemini 1.5 Flash with full resume context for personalized career coaching |
+
+---
+
+## 🎨 Design System
+
+InternHunt features a premium visual upgrade away from standard Streamlit layouts to match modern SaaS design languages (inspired by Vercel, Stripe, Linear, and Supabase):
+
+- **Modern SaaS Aesthetics**: Elevated dark mode theme paired with sleek, purple-to-blue gradient typography.
+- **Glassmorphism Theme**: Main layouts use semi-transparent cards with `backdrop-filter: blur(16px)` and thin high-contrast borders.
+- **Micro-Animations & Transitions**: Interactive hover offsets, border glows, and active floating card lifts.
+- **Spacious & Balanced Spacing**: Generous margins, clean alignments, and a clear vertical visual hierarchy.
+
+---
+
+## 🚀 UI Refresh
+
+The latest visual refresh updates key user flows:
+
+- **Redesigned AI Resume Analysis Experience**:
+  - Replaced native Streamlit file uploader styles with a premium glass card dropzone.
+  - Interactive cloud upload icon featuring transition lifts and custom glowing frames.
+  - Excluded repetitive technical labels, keeping focus on clear, clean onboarding instructions.
+  - Smooth uploaded success state displaying checkmark states and progress loaders.
+- **Redesigned Admin Authentication Portal**:
+  - Two-column landing experience featuring a hero brand column detailing recruitment stats and checkmarks.
+  - High-fidelity right-column credentials card.
+  
+> *"The latest interface redesign focuses on improving usability, reducing visual clutter, and creating a modern SaaS experience while preserving the application's original AI-powered resume analysis workflow."*
 
 ---
 
@@ -79,7 +115,7 @@ InternHunt processes resume uploads, evaluates scoring, logs user details to the
 1. **Extraction & Preprocessing:** The uploaded document is parsed, stripped of raw formatting, and cleaned of non-ASCII symbols and excessive spacing.
 2. **Parallel Feature Extraction:** 
    - **Regex filters** extract email, phone, and profile URLs.
-   - **spaCy matcher** extracts normalized skill sets.
+   - **spaCy matcher** extract normalized skill sets.
    - **TF-IDF Vectorizer** maps the cleaned text to 2500 terms, which are classified by the **MLPClassifier** to predict the candidate's career role.
 3. **ATS Assessment:** Core sections are checked, and missing skills are highlighted by matching actual skills against predicted career role profiles.
 4. **Data Persistence:** Candidate profiles and computed stats are logged to **Neon serverless PostgreSQL** for admin audit and analytics.
@@ -268,12 +304,13 @@ InternHunt/
 │   ├── Nevera-Bold.ttf
 │   ├── Nevera-Regular.ttf
 │   └── Nevera-Light.ttf
-│
+│        
 ├── 📂 Uploaded_Resumes/                        # User uploaded resume storage
 │   └── .gitkeep                                # Preserve directory in Git
 │        
 └── 📁 screenshots/                             # Application screenshots for README
 ```
+
 ---
 
 ## 🧪 Development & Testing

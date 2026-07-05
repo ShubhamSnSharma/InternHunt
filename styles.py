@@ -97,79 +97,278 @@ class StyleManager:
             color: var(--text-primary) !important;
         }}
         
-        /* Style file uploader default styling */
-        .stFileUploader > div > div > div > button {{
-            background: var(--primary) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 0.5rem 1rem !important;
-            transition: all 0.2s ease !important;
-        }}
+        /* ── Hide Native Streamlit Label and Default Icon ── */
+        [data-testid="stFileUploader"] > label {{ display: none !important; }}
+        [data-testid="stFileUploader"] section svg {{ display: none !important; }}
         
-        .stFileUploader > div > div > div > button:hover {{
-            background: var(--primary-light) !important;
-            transform: translateY(-1px) !important;
+        /* Hide native file limits helper elements */
+        [data-testid="stFileUploaderLimit"],
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderLimit"],
+        [data-testid="stFileUploader"] small,
+        .stFileUploader small {{
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
         }}
         
         /* Modern Drag & Drop File Uploader Override */
         [data-testid="stFileUploader"] {{
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+            width: 100% !important;
         }}
+        [data-testid="stFileUploader"] > label {{ display: none !important; }}
+        
         [data-testid="stFileUploader"] section {{
-            background: rgba(20, 26, 53, 0.45) !important;
+            background: linear-gradient(160deg, rgba(20, 26, 53, 0.7) 0%, rgba(13, 17, 30, 0.75) 100%) !important;
             backdrop-filter: blur(16px) !important;
             -webkit-backdrop-filter: blur(16px) !important;
-            border: 2px dashed rgba(99, 102, 241, 0.25) !important;
-            border-radius: 16px !important;
-            padding: 3rem 2rem !important;
+            border: 1px solid rgba(99, 102, 241, 0.18) !important;
+            border-radius: 24px !important;
+            padding: 3.5rem 2.5rem 3rem !important;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            min-height: 180px !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+            min-height: 380px !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
             position: relative !important;
+            cursor: pointer !important;
         }}
         [data-testid="stFileUploader"] section:hover {{
-            border-color: rgba(99, 102, 241, 0.7) !important;
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.2), 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
-            transform: translateY(-2px);
-        }}
-        /* Hide default dropzone text elements */
-        [data-testid="stFileUploader"] section > div:first-child {{
-            display: none !important;
-        }}
-        [data-testid="stFileUploader"] section button {{
-            display: none !important;
-        }}
-        /* Inject custom drag & drop labels */
-        [data-testid="stFileUploader"] section::before {{
-            content: "📤";
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            display: block;
-            filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.4));
-            animation: bounce 2s infinite alternate;
-        }}
-        [data-testid="stFileUploader"] section::after {{
-            content: "Drag & Drop Resume\\000Aor click to Browse Files\\000A\\000ASupported formats: PDF, DOCX (Max 200MB)";
-            white-space: pre-wrap;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            color: #94A3B8;
-            font-weight: 500;
-            line-height: 1.5;
-            display: block;
-            margin-top: 8px;
-            text-align: center;
+            background: linear-gradient(160deg, rgba(25, 32, 64, 0.75) 0%, rgba(17, 22, 40, 0.8) 100%) !important;
+            border-color: rgba(99, 102, 241, 0.38) !important;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.12), 0 12px 40px 0 rgba(0, 0, 0, 0.35) !important;
         }}
         
-        @keyframes bounce {{
-            0% {{ transform: translateY(0); }}
-            100% {{ transform: translateY(-6px); }}
+        /* Hide native Streamlit drag/drop icons */
+        [data-testid="stFileUploader"] section svg {{
+            display: none !important;
+        }}
+        
+        /* ── Empty State Styles ── */
+        [data-testid="stFileUploader"] section::before {{
+            content: "" !important;
+            display: block !important;
+            width: 64px !important;
+            height: 64px !important;
+            margin-bottom: 24px !important;
+            background-color: rgba(139, 92, 246, 0.08) !important;
+            border: 1px solid rgba(139, 92, 246, 0.2) !important;
+            border-radius: 16px !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='17 8 12 3 7 8'/%3E%3Cline x1='12' y1='3' x2='12' y2='15'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            box-shadow: 0 0 20px rgba(139, 92, 241, 0.15) !important;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease !important;
+        }}
+        [data-testid="stFileUploader"] section:hover::before {{
+            transform: translateY(-6px) !important;
+            box-shadow: 0 0 25px rgba(139, 92, 241, 0.3) !important;
+        }}
+
+        [data-testid="stFileUploaderDropzoneInstructions"] {{
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-family: inherit !important;
+            width: 100% !important;
+        }}
+
+        /* Title Line */
+        [data-testid="stFileUploaderDropzoneInstructions"]::before {{
+            content: "Ready to Discover Better Internships?" !important;
+            font-size: 24px !important;
+            font-weight: 800 !important;
+            background: linear-gradient(135deg, #A78BFA 0%, #60A5FA 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            display: block !important;
+            text-align: center !important;
+            letter-spacing: -0.5px !important;
+            margin-top: 4px !important;
+            margin-bottom: 12px !important;
+        }}
+
+        /* Description Line (First native child of instructions) */
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:first-child,
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:first-child,
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:first-of-type,
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:first-of-type {{
+            font-size: 0 !important;
+            color: transparent !important;
+            margin-bottom: 24px !important;
+            max-width: 500px !important;
+            display: block !important;
+        }}
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:first-child::after,
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:first-child::after,
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:first-of-type::after,
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:first-of-type::after {{
+            content: "Upload your resume and let InternHunt analyze your experience, identify your strengths, and recommend internships tailored to your profile." !important;
+            font-size: 15px !important;
+            font-weight: 400 !important;
+            color: #94A3B8 !important;
+            line-height: 1.65 !important;
+            display: block !important;
+            text-align: center !important;
+        }}
+
+        /* Hide the native second child ("50MB per file • PDF") */
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:nth-child(2),
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:nth-child(2),
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:nth-of-type(2),
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:nth-of-type(2),
+        [data-testid="stFileUploaderDropzoneInstructions"] > div:last-child,
+        [data-testid="stFileUploaderDropzoneInstructions"] > span:last-child {{
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }}
+
+        /* Divider Line */
+        [data-testid="stFileUploaderDropzoneInstructions"]::after {{
+            content: "────────────  or  ────────────" !important;
+            font-size: 13px !important;
+            color: rgba(255, 255, 255, 0.08) !important;
+            font-weight: 500 !important;
+            margin-bottom: 24px !important;
+            letter-spacing: 1px !important;
+            display: block !important;
+            text-align: center !important;
+        }}
+
+        /* Style the Streamlit button element as the CTA block */
+        [data-testid="stFileUploader"] button,
+        [data-testid="stFileUploader"] button * {{
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: auto !important;
+            height: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            font-size: 0 !important;
+            color: transparent !important;
+            line-height: 0 !important;
+            font-family: inherit !important;
+        }}
+        [data-testid="stFileUploader"] button:hover {{
+            background: transparent !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }}
+        
+        [data-testid="stFileUploader"] button::before {{
+            content: "Drop your resume here" !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: #FFFFFF !important;
+            display: block !important;
+            margin-bottom: 8px !important;
+            font-family: inherit !important;
+            line-height: 1.4 !important;
+        }}
+        
+        [data-testid="stFileUploader"] button::after {{
+            content: "Browse from your device" !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            color: #818CF8 !important;
+            display: block !important;
+            line-height: 1.4 !important;
+            transition: color 0.2s ease !important;
+        }}
+        
+        [data-testid="stFileUploader"] button:hover::after {{
+            color: #A78BFA !important;
+            text-decoration: underline !important;
+            text-underline-offset: 4px !important;
+        }}
+
+        /* Trust Row */
+        [data-testid="stFileUploader"] section::after {{
+            content: "🔒 Secure upload    •    ✨ AI-powered analysis    •    🛡 Private by design" !important;
+            display: block !important;
+            font-size: 12px !important;
+            color: #475569 !important;
+            font-weight: 500;
+            margin-top: 32px !important;
+            text-align: center !important;
+            letter-spacing: 0.2px !important;
+        }}
+
+        /* ── Uploaded State Transition ── */
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section::before {{
+            content: "" !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 50% !important;
+            background-color: rgba(16, 185, 129, 0.1) !important;
+            border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            box-shadow: none !important;
+            margin-bottom: 20px !important;
+            transform: none !important;
+        }}
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section:hover::before {{
+            transform: none !important;
+            box-shadow: none !important;
+        }}
+
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzoneInstructions"] > div,
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzoneInstructions"] > span {{
+            display: none !important;
+        }}
+
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzoneInstructions"]::before {{
+            content: "Resume Uploaded Successfully" !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: #10B981 !important;
+            margin-bottom: 8px !important;
+            display: block !important;
+        }}
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) [data-testid="stFileUploaderDropzoneInstructions"]::after {{
+            content: "Preparing AI analysis..." !important;
+            font-size: 14px !important;
+            color: #94A3B8 !important;
+            display: block !important;
+            margin-bottom: 24px !important;
+        }}
+
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) button {{
+            display: none !important;
+        }}
+        [data-testid="stFileUploader"]:has([data-testid="stUploadedFile"]) section::after {{
+            display: none !important;
+        }}
+
+        [data-testid="stFileUploader"] [data-testid="stUploadedFile"] {{
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: auto !important;
+        }}
+        [data-testid="stFileUploader"] [data-testid="stUploadedFile"] div {{
+            color: #F1F5F9 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
         }}
         
         /* Modern Glass Card Styling */

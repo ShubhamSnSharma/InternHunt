@@ -49,6 +49,12 @@ class Config:
     # Unified DB URL (preferred for Postgres/Neon)
     DATABASE_URL = os.getenv('DATABASE_URL') or (st.secrets.get('DATABASE_URL') if st else None)
 
+    # Admin Portal
+    ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
+
+    # Admin Portal Authentication
+    ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
+
     # Skill matching settings
     FUZZY_THRESHOLD = 50
     DIRECT_MATCH_WEIGHT = 1.0
@@ -79,7 +85,10 @@ class Config:
         current_api_key = os.getenv('GEMINI_API_KEY') or (st.secrets.get('GEMINI_API_KEY') if st else None)
         if not current_api_key or current_api_key == "your_gemini_api_key_here":
             warnings.append("Gemini API key not configured - chatbot features will be limited")
-        
+
+        if not cls.ADMIN_PASSWORD:
+            warnings.append("Admin password not configured - Admin portal will be inaccessible")
+
         if not os.path.exists(cls.UPLOAD_DIR):
             try:
                 os.makedirs(cls.UPLOAD_DIR, exist_ok=True)
