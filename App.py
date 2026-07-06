@@ -2259,30 +2259,28 @@ def main():
             letter-spacing: 1px;
             text-shadow: 0 0 8px rgba(139,92,246,0.5);
         }
-        /* Unified select box container styling */
-        .stSelectbox > div > div > div,
-        [data-baseweb="select"] {
+        /* Correct select box container styling */
+        div[data-baseweb="select"] {
             background-color: rgba(255,255,255,0.05) !important;
             border-radius: 10px !important;
             border: 1px solid rgba(255,255,255,0.15) !important;
             transition: all 0.3s ease !important;
             margin: 10px 0 !important;
             width: 100% !important;
+            box-shadow: none !important;
         }
         
-        /* Force text to be visible and white */
-        .stSelectbox div, 
-        .stSelectbox span, 
-        .stSelectbox input,
-        [data-testid="stSelectboxSingleValue"],
-        [data-baseweb="select"] * {
-            color: #FFFFFF !important;
-        }
-        
-        .stSelectbox > div > div > div:hover,
-        [data-baseweb="select"]:hover {
+        div[data-baseweb="select"]:hover {
             border-color: #8b5cf6 !important;
             box-shadow: 0 0 12px rgba(139,92,246,0.3) !important;
+        }
+        
+        /* Force text colors inside select box */
+        div[data-baseweb="select"] *,
+        div[data-testid="stSelectboxSingleValue"],
+        .stSelectbox div,
+        .stSelectbox span {
+            color: #FFFFFF !important;
         }
         
         /* Dropdown options list selection styles */
