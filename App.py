@@ -2259,31 +2259,40 @@ def main():
             letter-spacing: 1px;
             text-shadow: 0 0 8px rgba(139,92,246,0.5);
         }
-        
+        /* Unified select box container styling */
+        .stSelectbox > div > div > div,
         [data-baseweb="select"] {
             background-color: rgba(255,255,255,0.05) !important;
             border-radius: 10px !important;
             border: 1px solid rgba(255,255,255,0.15) !important;
-            color: #fff !important;
             transition: all 0.3s ease !important;
             margin: 10px 0 !important;
             width: 100% !important;
         }
         
+        /* Force text to be visible and white */
+        .stSelectbox div, 
+        .stSelectbox span, 
+        .stSelectbox input,
+        [data-testid="stSelectboxSingleValue"],
         [data-baseweb="select"] * {
-            color: #fff !important;
+            color: #FFFFFF !important;
         }
         
+        .stSelectbox > div > div > div:hover,
         [data-baseweb="select"]:hover {
             border-color: #8b5cf6 !important;
             box-shadow: 0 0 12px rgba(139,92,246,0.3) !important;
         }
         
-        [data-baseweb="select"] [aria-selected="true"] {
+        /* Dropdown options list selection styles */
+        [data-baseweb="select"] [aria-selected="true"],
+        div[role="listbox"] div[aria-selected="true"] {
             background-color: rgba(139,92,246,0.2) !important;
         }
         
-        [data-baseweb="select"] [role="option"]:hover {
+        [data-baseweb="select"] [role="option"]:hover,
+        div[role="listbox"] div[role="option"]:hover {
             background-color: rgba(139,92,246,0.3) !important;
         }
         </style>
