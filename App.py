@@ -4114,16 +4114,31 @@ def main():
                     # Only insert if we haven't saved this specific resume for this user
                     if resume_id and not st.session_state.get(resume_db_key, False):
                         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+                        
+                        # Generate recommended skills based on predicted domain
+                        domain_skills_map = {
+                            'Data Science': ['Python', 'Pandas', 'NumPy', 'SQL', 'Matplotlib', 'Machine Learning', 'Deep Learning', 'Scikit-Learn', 'TensorFlow', 'PyTorch'],
+                            'Web Designing': ['HTML', 'CSS', 'JavaScript', 'React', 'Figma', 'UI/UX', 'TailwindCSS', 'Bootstrap', 'Adobe XD'],
+                            'Java Developer': ['Java', 'Spring Boot', 'Hibernate', 'Maven', 'SQL', 'Git', 'Data Structures', 'Algorithms'],
+                            'DevOps Engineer': ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'CI/CD', 'Terraform', 'Jenkins', 'Linux', 'Bash'],
+                            'Database': ['SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Database Design', 'NoSQL', 'PL/SQL'],
+                            'Software Developer': ['Python', 'Java', 'C++', 'Git', 'Data Structures', 'Algorithms', 'SQL', 'OOP'],
+                            'Python Developer': ['Python', 'Django', 'Flask', 'SQL', 'Git', 'REST APIs', 'PostgreSQL', 'Docker'],
+                        }
+                        user_skills_clean = [s.strip().lower() for s in (skills or [])]
+                        target_skills = domain_skills_map.get(predicted_cat or 'Software Developer', domain_skills_map['Software Developer'])
+                        recommended_skills_list = [s for s in target_skills if s.lower() not in user_skills_clean][:4]
+
                         success = db_manager.insert_user_data(
                             name=resume_data['name'],
                             email=resume_data['email'],
                             res_score=score,
                             timestamp=timestamp,
-                            no_of_pages=1,  # Default
-                            reco_field="General",
-                            cand_level="Intermediate",
+                            no_of_pages=pages,
+                            reco_field=predicted_cat or "General",
+                            cand_level=candidate_level or "Entry / Student",
                             skills=skills,
-                            recommended_skills=[],
+                            recommended_skills=recommended_skills_list,
                             courses=recommended_courses
                         )
                         if success:
