@@ -4852,7 +4852,7 @@ def main():
                                 hoverinfo='label+value',
                                 hoverlabel=dict(bgcolor="#0F172A", font_size=11, font_family="Inter, sans-serif")
                             )
-                            st.plotly_chart(fig_fields, use_container_width=True, config={'displayModeBar': False})
+                            st.plotly_chart(fig_fields, width="stretch", config={'displayModeBar': False})
 
                         with chart_col2:
                             st.markdown(clean_html("""
@@ -4897,7 +4897,7 @@ def main():
                                     margin=dict(t=10, b=10, l=10, r=20),
                                     height=320,
                                 )
-                                st.plotly_chart(fig_skills, use_container_width=True, config={'displayModeBar': False})
+                                st.plotly_chart(fig_skills, width="stretch", config={'displayModeBar': False})
                             else:
                                 st.markdown(clean_html("""
                                 <div style="background:rgba(99,102,241,0.02); border:1px dashed rgba(99,102,241,0.15);
@@ -4954,7 +4954,7 @@ def main():
                             margin=dict(t=15, b=15, l=15, r=15),
                             height=260,
                         )
-                        st.plotly_chart(fig_scores, use_container_width=True, config={'displayModeBar': False})
+                        st.plotly_chart(fig_scores, width="stretch", config={'displayModeBar': False})
 
                     with tab_database:
                         # ── Filter bar ───────────────────────────────────────
