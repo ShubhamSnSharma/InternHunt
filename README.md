@@ -336,7 +336,7 @@ black .
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how to get started:
 
@@ -355,7 +355,7 @@ We welcome contributions! Here's how to get started:
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **Shubham Sharma**
 - GitHub: [@ShubhamSnSharma](https://github.com/ShubhamSnSharma)
@@ -363,7 +363,7 @@ We welcome contributions! Here's how to get started:
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Google Gemini](https://ai.google.dev/) — Conversational AI capabilities
 - [Streamlit](https://streamlit.io/) — Beautiful web framework for data apps
