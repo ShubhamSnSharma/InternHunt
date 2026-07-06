@@ -53,7 +53,8 @@
 *Real-time internship opportunities matching your skills (scraped from multiple platforms like Internshala, Remotive, and Jooble)*
 
 ### 🔐 Admin Dashboard
-![Admin Dashboard](./screenshots/admin-dashboard.png)
+![Admin Dashboard 1](./screenshots/admin-dashboard1.png)
+![Admin Dashboard 2](./screenshots/admin-dashboard2.png)
 *User management and analytics with premium Plotly interactive visualizations*
 
 ---
