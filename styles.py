@@ -2087,18 +2087,25 @@ class StyleManager:
             }
             
             /* Select boxes - Enhanced */
-            .stSelectbox > div > div > div {
-                background-color: rgba(26, 31, 58, 0.8);
-                color: var(--text-primary);
-                border: 2px solid rgba(99, 102, 241, 0.2);
-                border-radius: 10px;
-                transition: all 0.3s ease;
+            div[data-baseweb="select"] {
+                background-color: rgba(26, 31, 58, 0.8) !important;
+                border: 2px solid rgba(99, 102, 241, 0.2) !important;
+                border-radius: 10px !important;
+                transition: all 0.3s ease !important;
             }
             
-            .stSelectbox > div > div > div:hover {
-                border-color: #6366F1;
-                background-color: rgba(26, 31, 58, 1);
-                box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            div[data-baseweb="select"]:hover {
+                border-color: #6366F1 !important;
+                background-color: rgba(26, 31, 58, 1) !important;
+                box-shadow: 0 0 15px rgba(99, 102, 241, 0.2) !important;
+            }
+
+            /* Selectbox text visibility */
+            div[data-baseweb="select"] *,
+            div[data-testid="stSelectboxSingleValue"],
+            .stSelectbox div,
+            .stSelectbox span {
+                color: var(--text-primary) !important;
             }
             
             /* Hide empty Streamlit style-only containers to remove layout gaps */
